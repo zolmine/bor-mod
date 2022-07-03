@@ -24,7 +24,7 @@ import (
 	"math/big"
 	"sync"
 	"time"
-	byH "./internal/ethapi/api"
+	// byH "./internal/ethapi/api"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -162,7 +162,8 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Su
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, h := range hashes {
-					data := byH.GetTransactionByHash(ctx,h)
+					// data := byH.GetTransactionByHash(ctx,h)
+					data := h
 					notifier.Notify(rpcSub.ID, data)
 				}
 			case <-rpcSub.Err():
