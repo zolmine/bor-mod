@@ -155,7 +155,7 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Su
 	go func() {
 		txHashes := make(chan []common.Hash, 128)
 		pendingTxSub := api.events.SubscribePendingTxs(txHashes)
-
+		t := "hello"
 		for {
 			select {
 			case hashes := <-txHashes:
