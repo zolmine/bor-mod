@@ -633,8 +633,8 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, h := range hashes {
 					// resultsT, _, _ := api.client.TransactionByHash(ctx, h)
-					fmt.Print(api.client.TransactionByHash(ctx, h))
-					notifier.Notify(rpcSub.ID, h)
+					// fmt.Print()
+					notifier.Notify(rpcSub.ID, api.client.TransactionByHash(ctx, h))
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
