@@ -24,7 +24,7 @@ import (
 	"math/big"
 	"sync"
 	"time"
-	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -56,7 +56,7 @@ type PublicFilterAPI struct {
 	filters   map[rpc.ID]*filter
 	timeout   time.Duration
 	borLogs   bool
-	byHash ethclient.EthereumClient
+	byHash *ethapi.PublicTransactionPoolAPI
 	chainConfig *params.ChainConfig
 }
 
