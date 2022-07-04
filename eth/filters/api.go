@@ -24,12 +24,11 @@ import (
 	"math/big"
 	"sync"
 	"time"
-	
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -632,8 +631,9 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, h := range hashes {
-					resultsT, _, _ := api.client.TransactionByHash(ctx, h)
-					notifier.Notify(rpcSub.ID, resultsT)
+					// resultsT, _, _ := api.client.TransactionByHash(ctx, h)
+					fmt.println(api.client.TransactionByHash(ctx, h))
+					notifier.Notify(rpcSub.ID, h)
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
