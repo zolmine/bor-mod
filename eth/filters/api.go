@@ -21,17 +21,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/big"
-	"sync"
-	"time"
-	"github.com/ethereum/go-ethereum/internal/ethapi"
-	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
+	"math/big"
+	"sync"
+	"time"
 )
 
 // filter is a helper struct that holds meta information over the filter type
@@ -48,15 +47,15 @@ type filter struct {
 // PublicFilterAPI offers support to create and manage filters. This will allow external clients to retrieve various
 // information related to the Ethereum protocol such als blocks, transactions and logs.
 type PublicFilterAPI struct {
-	backend   Backend
-	mux       *event.TypeMux
-	quit      chan struct{}
-	events    *EventSystem
-	filtersMu sync.Mutex
-	filters   map[rpc.ID]*filter
-	timeout   time.Duration
-	borLogs   bool
-	byHash *ethapi.PublicTransactionPoolAPI
+	backend     Backend
+	mux         *event.TypeMux
+	quit        chan struct{}
+	events      *EventSystem
+	filtersMu   sync.Mutex
+	filters     map[rpc.ID]*filter
+	timeout     time.Duration
+	borLogs     bool
+	client      *ethclient.Client
 	chainConfig *params.ChainConfig
 }
 
@@ -613,7 +612,6 @@ func decodeTopic(s string) (common.Hash, error) {
 	return common.BytesToHash(b), err
 }
 
-
 func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
@@ -632,7 +630,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, h := range hashes {
-					resultsT,_ := api.byHash.GetTransactionByHash(ctx, h)
+					resultsT, _ := api.client.TransactionByHash(ctx, h)
 					notifier.Notify(rpcSub.ID, resultsT)
 				}
 			case <-rpcSub.Err():
