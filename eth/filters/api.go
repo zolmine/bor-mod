@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"sync"
 	"math/big"
-	"sync"
 	"time"
 	// "github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum"
