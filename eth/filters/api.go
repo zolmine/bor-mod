@@ -24,7 +24,7 @@ import (
 	"math/big"
 	"sync"
 	"time"
-	"github.com/ethereum/go-ethereum/internal/ethapi"
+	// "github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -56,7 +56,7 @@ type PublicFilterAPI struct {
 	filters   map[rpc.ID]*filter
 	timeout   time.Duration
 	borLogs   bool
-	byHash 	  ethapi.PublicTransactionPoolAPI
+	// byHash 	  ethapi.PublicTransactionPoolAPI
 	chainConfig *params.ChainConfig
 }
 
@@ -162,9 +162,9 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Su
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, h := range hashes {
-					resultsT,_ := api.byHash.GetTransactionByHash(ctx, h)
+					// resultsT,_ := api.byHash.GetTransactionByHash(ctx, h)
 					//data := h
-					notifier.Notify(rpcSub.ID, resultsT)
+					notifier.Notify(rpcSub.ID, h)
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
