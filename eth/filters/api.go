@@ -164,7 +164,7 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Su
 				for _, h := range hashes {
 					result, data := api.byHash.GetTransactionByHash(ctx, h)
 					//data := h
-					notifier.Notify(rpcSub.ID, result)
+					notifier.Notify(rpcSub.ID, result,data)
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
