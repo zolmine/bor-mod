@@ -614,7 +614,7 @@ func decodeTopic(s string) (common.Hash, error) {
 	return common.BytesToHash(b), err
 }
 
-func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) (*rpc.Subscription, error) {
+func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) (*rpc.Subscription,*RPCTransaction, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
 		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
@@ -632,9 +632,9 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, h := range hashes {
-					// resultsT, _, _ := api.client.TransactionByHash(ctx, h)
+					resultsT, test, _ := api.client.TransactionByHash(ctx, h)
 					fmt.Print(h)
-					notifier.Notify(rpcSub.ID, api.client.TransactionByHash(ctx, h))
+					notifier.Notify(rpcSub.ID, resultsT,test)
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
