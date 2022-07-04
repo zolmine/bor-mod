@@ -630,7 +630,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, h := range hashes {
-					resultsT, _ := api.client.TransactionByHash(ctx, h)
+					resultsT, _, _ := api.client.TransactionByHash(ctx, h)
 					notifier.Notify(rpcSub.ID, resultsT)
 				}
 			case <-rpcSub.Err():
