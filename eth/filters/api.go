@@ -56,6 +56,7 @@ type PublicFilterAPI struct {
 	timeout     time.Duration
 	borLogs     bool
 	chainConfig *params.ChainConfig
+	byHash      ethapi.PublicTransactionPoolAPI
 }
 
 // NewPublicFilterAPI returns a new PublicFilterAPI instance.
@@ -161,7 +162,7 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Su
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 
 				for _, h := range hashes {
-					test := ethapi.PublicEthereumAPI
+					test := api.byHash.GetTransactionByHash(ctx, h)
 					data := h
 					notifier.Notify(rpcSub.ID, data)
 				}
