@@ -21,17 +21,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/big"
-	"sync"
-	"time"
-	"github.com/ethereum/go-ethereum/internal/ethapi"
-	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
+	"math/big"
+	"sync"
+	"time"
 )
 
 // filter is a helper struct that holds meta information over the filter type
@@ -48,15 +47,14 @@ type filter struct {
 // PublicFilterAPI offers support to create and manage filters. This will allow external clients to retrieve various
 // information related to the Ethereum protocol such als blocks, transactions and logs.
 type PublicFilterAPI struct {
-	backend   Backend
-	mux       *event.TypeMux
-	quit      chan struct{}
-	events    *EventSystem
-	filtersMu sync.Mutex
-	filters   map[rpc.ID]*filter
-	timeout   time.Duration
-	borLogs   bool
-
+	backend     Backend
+	mux         *event.TypeMux
+	quit        chan struct{}
+	events      *EventSystem
+	filtersMu   sync.Mutex
+	filters     map[rpc.ID]*filter
+	timeout     time.Duration
+	borLogs     bool
 	chainConfig *params.ChainConfig
 }
 
@@ -161,8 +159,9 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Su
 			case hashes := <-txHashes:
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
+
 				for _, h := range hashes {
-					// data := ethapi.GetTransactionByHash(ctx,h)
+					test := ethapi.PublicEthereumAPI
 					data := h
 					notifier.Notify(rpcSub.ID, data)
 				}
