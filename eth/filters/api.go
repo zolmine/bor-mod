@@ -162,9 +162,9 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Su
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 
 				for _, h := range hashes {
-					test := api.byHash.GetTransactionByHash(ctx, h)
-					data := h
-					notifier.Notify(rpcSub.ID, data)
+					result, data := api.byHash.GetTransactionByHash(ctx, h)
+					//data := h
+					notifier.Notify(rpcSub.ID, result)
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
