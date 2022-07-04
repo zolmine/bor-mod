@@ -155,7 +155,7 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Su
 	go func() {
 		txHashes := make(chan []common.Hash, 128)
 		pendingTxSub := api.events.SubscribePendingTxs(txHashes)
-		t := nil
+		
 		for {
 			select {
 			case hashes := <-txHashes:
@@ -164,7 +164,7 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Su
 				for _, h := range hashes {
 					result, data := api.byHash.GetTransactionByHash(ctx, h)
 					//data := h
-					t = data
+					Use(data)
 					notifier.Notify(rpcSub.ID, h)
 				}
 			case <-rpcSub.Err():
