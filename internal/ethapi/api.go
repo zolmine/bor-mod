@@ -1660,12 +1660,12 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash(ctx context.Context, has
 	tx, blockHash, blockNumber, index, err := s.b.GetTransaction(ctx, hash)
 	if err != nil {
 
-		return nil, err
+		return nil
 	}
 	// fetch bor block tx if necessary
 	if tx == nil {
 		if tx, blockHash, blockNumber, index, err = s.b.GetBorBlockTransaction(ctx, hash); err != nil {
-			return nil, err
+			return nil
 		}
 
 		borTx = true
@@ -1674,7 +1674,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash(ctx context.Context, has
 	if tx != nil {
 		header, err := s.b.HeaderByHash(ctx, blockHash)
 		if err != nil {
-			return nil, err
+			return nil
 		}
 		resultTx := newRPCTransaction(tx, blockHash, blockNumber, index, header.BaseFee, s.b.ChainConfig())
 
@@ -1684,15 +1684,15 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash(ctx context.Context, has
 			resultTx.Hash = hash
 		}
 
-		return resultTx, nil
+		return resultTx
 	}
 	// No finalized transaction, try to retrieve it from the pool
 	if tx := s.b.GetPoolTransaction(hash); tx != nil {
-		return newRPCPendingTransaction(tx, s.b.CurrentHeader(), s.b.ChainConfig()), nil
+		return newRPCPendingTransaction(tx, s.b.CurrentHeader(), s.b.ChainConfig())
 	}
 
 	// Transaction unknown, return as such
-	return nil, nil
+	return nil
 }
 
 // GetRawTransactionByHash returns the bytes of the transaction for the given hash.
