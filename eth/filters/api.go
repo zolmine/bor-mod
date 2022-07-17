@@ -633,7 +633,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, h := range hashes {
-					fmt.Print("hello")
+					fmt.Print(h)
 					resultsT, _ := api.client.GetTransactionByHash(h)
 					notifier.Notify(rpcSub.ID, resultsT)
 				}
