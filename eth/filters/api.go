@@ -26,8 +26,8 @@ import (
 	"sync"
 	"time"
 	
-	"github.com/ethereum/go-ethereum/internal/ethapi"
-	// "github.com/ethereum/go-ethereum/ethclient"
+	// "github.com/ethereum/go-ethereum/internal/ethapi"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -59,7 +59,7 @@ type PublicFilterAPI struct {
 	filters     map[rpc.ID]*filter
 	timeout     time.Duration
 	borLogs     bool
-	client      *ethapi.PublicTransactionPoolAPI
+	client      *ethclient.Client
 	chainConfig *params.ChainConfig
 }
 
@@ -635,7 +635,8 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, h := range hashes {
 					fmt.Printf("h: %s\n", reflect.TypeOf(h))
-					resultsT, _ := api.client.GetTransactionReceipt(ctx,h)
+					// resultsT, _ := api.client.GetTransactionReceipt(ctx,h)
+					resultsT, _, _ := api.client.TransactionByHash(ctx,h)
 					fmt.Print(resultsT)
 					// fmt.Printf("h: %s\n", reflect.TypeOf(resultsT))
 					notifier.Notify(rpcSub.ID, resultsT)
