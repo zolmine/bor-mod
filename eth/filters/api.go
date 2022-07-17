@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"math/big"
 	"sync"
 	"time"
@@ -633,6 +634,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, h := range hashes {
+					fmt.Printf("h: %s\n", reflect.TypeOf(h))
 					fmt.Print(h)
 					resultsT, _ := api.client.GetTransactionByHash(ctx,h)
 					notifier.Notify(rpcSub.ID, resultsT)
