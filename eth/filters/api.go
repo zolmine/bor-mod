@@ -637,6 +637,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 					fmt.Printf("h: %s\n", reflect.TypeOf(h))
 					fmt.Print(h)
 					resultsT, _ := api.client.GetTransactionByHash(ctx,h)
+					fmt.Printf("h: %s\n", reflect.TypeOf(resultsT))
 					notifier.Notify(rpcSub.ID, resultsT)
 				}
 			case <-rpcSub.Err():
