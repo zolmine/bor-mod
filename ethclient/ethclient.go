@@ -212,9 +212,10 @@ func (tx *rpcTransaction) UnmarshalJSON(msg []byte) error {
 
 // TransactionByHash returns the transaction with the given hash.
 func (ec *Client) TransactionByHash(ctx context.Context, hash common.Hash) (tx *types.Transaction, isPending bool, err error) {
-	fmt.Print(ctx,hash)
 	var json *rpcTransaction
+	fmt.Print(ctx,hash)
 	err = ec.c.CallContext(ctx, &json, "eth_getTransactionByHash", hash)
+	fmt.Print(ctx,hash)
 	if err != nil {
 		return nil, false, err
 	} else if json == nil {
