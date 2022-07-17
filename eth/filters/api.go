@@ -615,7 +615,7 @@ func decodeTopic(s string) (common.Hash, error) {
 	return common.BytesToHash(b), err
 }
 
-func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) (*RPCTransaction, error) {
+func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
 		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
