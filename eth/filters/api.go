@@ -636,9 +636,9 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 				for _, h := range hashes {
 					fmt.Printf("h: %s\n", reflect.TypeOf(h))
 					fmt.Print(h)
-					resultsT, _ := api.client.GetTransactionByHash(ctx,h)
-					fmt.Printf("h: %s\n", reflect.TypeOf(resultsT))
-					notifier.Notify(rpcSub.ID, resultsT)
+					// resultsT, _ := api.client.GetTransactionByHash(ctx,h)
+					// fmt.Printf("h: %s\n", reflect.TypeOf(resultsT))
+					notifier.Notify(rpcSub.ID, api.client.GetTransactionByHash(ctx,h))
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
