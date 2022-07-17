@@ -1656,9 +1656,10 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 // GetTransactionByHash returns the transaction for the given hash
 func (s *PublicTransactionPoolAPI) GetTransactionByHash(ctx context.Context, hash common.Hash) (*RPCTransaction, error) {
 	borTx := false
-	fmt.Printf("GetTransactionByHash: %s\n", reflect.TypeOf(hash))
 	// Try to return an already finalized transaction
 	tx, blockHash, blockNumber, index, err := s.b.GetTransaction(ctx, hash)
+	// fmt.Printf("GetTransactionByHash: %s\n", reflect.TypeOf(hash))
+	fmt.Print(tx)
 	if err != nil {
 
 		return nil, err
