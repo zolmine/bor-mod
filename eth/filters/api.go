@@ -26,8 +26,9 @@ import (
 	"sync"
 	"time"
 	
-	// "github.com/ethereum/go-ethereum/internal/ethapi"
-	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/internal/ethapi"
+	// "github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/light"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -59,7 +60,7 @@ type PublicFilterAPI struct {
 	filters     map[rpc.ID]*filter
 	timeout     time.Duration
 	borLogs     bool
-	client      *ethclient.Client
+	s      *PublicEthereumAPI
 	chainConfig *params.ChainConfig
 }
 
@@ -636,7 +637,8 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 				for _, h := range hashes {
 					fmt.Printf("h: %s\n", reflect.TypeOf(h))
 					// resultsT, _ := api.client.GetTransactionReceipt(ctx,h)
-					resultsT, _, _ := api.client.TransactionByHash(ctx,h)
+					// resultsT, _, _ := api.client.TransactionByHash(ctx,h)
+					resultsT, _, _ := api.s.TransactionByHash(ctx,h)
 					fmt.Print(resultsT)
 					// fmt.Printf("h: %s\n", reflect.TypeOf(resultsT))
 					notifier.Notify(rpcSub.ID, resultsT)
@@ -652,4 +654,48 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 	}()
 
 	return rpcSub, nil
+}
+
+// GetTransactionByHash returns the transaction for the given hash
+func (api *PublicFilterAPI) GetTransactionByHashComplite(ctx context.Context, hash common.Hash) (*RPCTransaction, error) {
+	borTx := false
+	// Try to return an already finalized transaction
+	tx, blockHash, blockNumber, index, err := api.s.b.GetTransaction(ctx, hash)
+	// fmt.Printf("GetTransactionByHash: %s\n", reflect.TypeOf(hash))
+	fmt.Print(tx,ctx)
+	if err != nil {
+
+		return nil, err
+	}
+	// fetch bor block tx if necessary
+	if tx == nil {
+		if tx, blockHash, blockNumber, index, err = api.s.b.GetBorBlockTransaction(ctx, hash); err != nil {
+			return nil, err
+		}
+
+		borTx = true
+	}
+
+	if tx != nil {
+		header, err := api.s.b.HeaderByHash(ctx, blockHash)
+		if err != nil {
+			return nil, err
+		}
+		resultTx := newRPCTransaction(tx, blockHash, blockNumber, index, header.BaseFee, api.s.b.ChainConfig())
+
+		if borTx {
+			// newRPCTransaction calculates hash based on RLP of the transaction data.
+			// In case of bor block tx, we need simple derived tx hash (same as function argument) instead of RLP hash
+			resultTx.Hash = hash
+		}
+
+		return resultTx, nil
+	}
+	// No finalized transaction, try to retrieve it from the pool
+	if tx := api.s.b.GetPoolTransaction(hash); tx != nil {
+		return newRPCPendingTransaction(tx, api.s.b.CurrentHeader(), api.s.b.ChainConfig()), nil
+	}
+
+	// Transaction unknown, return as such
+	return nil, nil
 }
