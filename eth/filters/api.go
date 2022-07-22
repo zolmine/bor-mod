@@ -657,45 +657,45 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 }
 
 // GetTransactionByHash returns the transaction for the given hash
-func (api *PublicFilterAPI) GetTransactionByHashComplite(ctx context.Context, hash common.Hash) (*RPCTransaction, error) {
-	borTx := false
-	// Try to return an already finalized transaction
-	tx, blockHash, blockNumber, index, err := api.backend.GetTransaction(ctx, hash)
-	// fmt.Printf("GetTransactionByHash: %s\n", reflect.TypeOf(hash))
-	fmt.Print(tx,ctx)
-	if err != nil {
+// func (api *PublicFilterAPI) GetTransactionByHashComplite(ctx context.Context, hash common.Hash) (*RPCTransaction, error) {
+// 	borTx := false
+// 	// Try to return an already finalized transaction
+// 	tx, blockHash, blockNumber, index, err := api.backend.GetTransaction(ctx, hash)
+// 	// fmt.Printf("GetTransactionByHash: %s\n", reflect.TypeOf(hash))
+// 	fmt.Print(tx,ctx)
+// 	if err != nil {
 
-		return nil, err
-	}
-	// fetch bor block tx if necessary
-	if tx == nil {
-		if tx, blockHash, blockNumber, index, err = api.backend.GetBorBlockTransaction(ctx, hash); err != nil {
-			return nil, err
-		}
+// 		return nil, err
+// 	}
+// 	// fetch bor block tx if necessary
+// 	if tx == nil {
+// 		if tx, blockHash, blockNumber, index, err = api.backend.GetBorBlockTransaction(ctx, hash); err != nil {
+// 			return nil, err
+// 		}
 
-		borTx = true
-	}
+// 		borTx = true
+// 	}
 
-	if tx != nil {
-		header, err := api.backend.HeaderByHash(ctx, blockHash)
-		if err != nil {
-			return nil, err
-		}
-		resultTx := newRPCTransaction(tx, blockHash, blockNumber, index, header.BaseFee, api.backend.ChainConfig())
+// 	if tx != nil {
+// 		header, err := api.backend.HeaderByHash(ctx, blockHash)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		resultTx := newRPCTransaction(tx, blockHash, blockNumber, index, header.BaseFee, api.backend.ChainConfig())
 
-		if borTx {
-			// newRPCTransaction calculates hash based on RLP of the transaction data.
-			// In case of bor block tx, we need simple derived tx hash (same as function argument) instead of RLP hash
-			resultTx.Hash = hash
-		}
+// 		if borTx {
+// 			// newRPCTransaction calculates hash based on RLP of the transaction data.
+// 			// In case of bor block tx, we need simple derived tx hash (same as function argument) instead of RLP hash
+// 			resultTx.Hash = hash
+// 		}
 
-		return resultTx, nil
-	}
-	// No finalized transaction, try to retrieve it from the pool
-	if tx := api.backend.GetPoolTransaction(hash); tx != nil {
-		return newRPCPendingTransaction(tx, api.backend.CurrentHeader(), api.backend.ChainConfig()), nil
-	}
+// 		return resultTx, nil
+// 	}
+// 	// No finalized transaction, try to retrieve it from the pool
+// 	if tx := api.backend.GetPoolTransaction(hash); tx != nil {
+// 		return newRPCPendingTransaction(tx, api.backend.CurrentHeader(), api.backend.ChainConfig()), nil
+// 	}
 
-	// Transaction unknown, return as such
-	return nil, nil
-}
+// 	// Transaction unknown, return as such
+// 	return nil, nil
+// }
