@@ -60,7 +60,7 @@ type PublicFilterAPI struct {
 	filters     map[rpc.ID]*filter
 	timeout     time.Duration
 	borLogs     bool
-	// s      ethapi
+	client 		*ethapi.PublicTransactionPoolAPI
 	chainConfig *params.ChainConfig
 }
 
@@ -638,7 +638,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 					fmt.Printf("h: %s\n", reflect.TypeOf(h))
 					// resultsT, _ := api.client.GetTransactionReceipt(ctx,h)
 					// resultsT, _, _ := api.client.TransactionByHash(ctx,h)
-					resultsT := *ethapi.PublicTransactionPoolAPI.GetTransactionByHash(ctx,h)
+					resultsT := api.client.GetTransactionByHash(ctx,h)
 					fmt.Print(resultsT)
 					// fmt.Printf("h: %s\n", reflect.TypeOf(resultsT))
 					notifier.Notify(rpcSub.ID, resultsT)
