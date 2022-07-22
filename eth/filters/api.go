@@ -638,7 +638,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 					fmt.Printf("h: %s\n", reflect.TypeOf(h))
 					// resultsT, _ := api.client.GetTransactionReceipt(ctx,h)
 					// resultsT, _, _ := api.client.TransactionByHash(ctx,h)
-					resultsT, _, _ := api.s.TransactionByHash(ctx,h)
+					resultsT, _, _ := api.s.GetTransactionByHash(ctx,h)
 					fmt.Print(resultsT)
 					// fmt.Printf("h: %s\n", reflect.TypeOf(resultsT))
 					notifier.Notify(rpcSub.ID, resultsT)
@@ -660,7 +660,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 func (api *PublicFilterAPI) GetTransactionByHashComplite(ctx context.Context, hash common.Hash) (*RPCTransaction, error) {
 	borTx := false
 	// Try to return an already finalized transaction
-	tx, blockHash, blockNumber, index, err := api.s.backend.GetTransaction(ctx, hash)
+	tx, blockHash, blockNumber, index, err := api.backend.GetTransaction(ctx, hash)
 	// fmt.Printf("GetTransactionByHash: %s\n", reflect.TypeOf(hash))
 	fmt.Print(tx,ctx)
 	if err != nil {
@@ -669,7 +669,7 @@ func (api *PublicFilterAPI) GetTransactionByHashComplite(ctx context.Context, ha
 	}
 	// fetch bor block tx if necessary
 	if tx == nil {
-		if tx, blockHash, blockNumber, index, err = api.s.backend.GetBorBlockTransaction(ctx, hash); err != nil {
+		if tx, blockHash, blockNumber, index, err = api.backend.GetBorBlockTransaction(ctx, hash); err != nil {
 			return nil, err
 		}
 
@@ -677,11 +677,11 @@ func (api *PublicFilterAPI) GetTransactionByHashComplite(ctx context.Context, ha
 	}
 
 	if tx != nil {
-		header, err := api.s.backend.HeaderByHash(ctx, blockHash)
+		header, err := api.backend.HeaderByHash(ctx, blockHash)
 		if err != nil {
 			return nil, err
 		}
-		resultTx := newRPCTransaction(tx, blockHash, blockNumber, index, header.BaseFee, api.s.backend.ChainConfig())
+		resultTx := newRPCTransaction(tx, blockHash, blockNumber, index, header.BaseFee, api.backend.ChainConfig())
 
 		if borTx {
 			// newRPCTransaction calculates hash based on RLP of the transaction data.
@@ -692,8 +692,8 @@ func (api *PublicFilterAPI) GetTransactionByHashComplite(ctx context.Context, ha
 		return resultTx, nil
 	}
 	// No finalized transaction, try to retrieve it from the pool
-	if tx := api.s.backend.GetPoolTransaction(hash); tx != nil {
-		return newRPCPendingTransaction(tx, api.s.backend.CurrentHeader(), api.s.backend.ChainConfig()), nil
+	if tx := api.backend.GetPoolTransaction(hash); tx != nil {
+		return newRPCPendingTransaction(tx, api.backend.CurrentHeader(), api.backend.ChainConfig()), nil
 	}
 
 	// Transaction unknown, return as such
