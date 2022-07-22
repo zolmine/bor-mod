@@ -60,7 +60,7 @@ type PublicFilterAPI struct {
 	filters     map[rpc.ID]*filter
 	timeout     time.Duration
 	borLogs     bool
-	s      *ethapi.PublicEthereumAPI
+	s      *ethapi
 	chainConfig *params.ChainConfig
 }
 
