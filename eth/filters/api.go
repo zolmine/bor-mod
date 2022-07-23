@@ -189,14 +189,13 @@ func (api *PublicFilterAPI) NewPendingTransactionsCompile(ctx context.Context) (
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
 		pendingTxSub := api.events.SubscribePendingTxsCompile(txs)
-
+		fmt.Printf("GetTransactionByHash: %s\n", reflect.TypeOf(txs))
 		for {
 			select {
 			case txs := <-txs:
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
-					fmt.Print(tx)
 					notifier.Notify(rpcSub.ID, tx)
 					
 				}
