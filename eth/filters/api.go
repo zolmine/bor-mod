@@ -40,6 +40,7 @@ type filter struct {
 	typ      Type
 	deadline *time.Timer // filter is inactiv when deadline triggers
 	hashes   []common.Hash
+	txs []*types.Transaction
 	crit     FilterCriteria
 	logs     []*types.Log
 	s        *Subscription // associated subscription in event system
@@ -144,7 +145,40 @@ func (api *PublicFilterAPI) NewPendingTransactionFilter() rpc.ID {
 
 // NewPendingTransactions creates a subscription that is triggered each time a transaction
 // enters the transaction pool and was signed from one of the transactions this nodes manages.
-func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Subscription, error) {
+// func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Subscription, error) {
+// 	notifier, supported := rpc.NotifierFromContext(ctx)
+// 	if !supported {
+// 		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
+// 	}
+
+// 	rpcSub := notifier.CreateSubscription()
+
+// 	go func() {
+// 		txHashes := make(chan []common.Hash, 128)
+// 		pendingTxSub := api.events.SubscribePendingTxs(txHashes)
+
+// 		for {
+// 			select {
+// 			case hashes := <-txHashes:
+// 				// To keep the original behaviour, send a single tx hash in one notification.
+// 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
+// 				for _, h := range hashes {
+// 					notifier.Notify(rpcSub.ID, h)
+// 				}
+// 			case <-rpcSub.Err():
+// 				pendingTxSub.Unsubscribe()
+// 				return
+// 			case <-notifier.Closed():
+// 				pendingTxSub.Unsubscribe()
+// 				return
+// 			}
+// 		}
+// 	}()
+
+// 	return rpcSub, nil
+// }
+
+func (api *FilterAPI) NewPendingTransactions(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
 		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
@@ -153,16 +187,20 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Su
 	rpcSub := notifier.CreateSubscription()
 
 	go func() {
-		txHashes := make(chan []common.Hash, 128)
-		pendingTxSub := api.events.SubscribePendingTxs(txHashes)
+		txs := make(chan []*types.Transaction, 128)
+		pendingTxSub := api.events.SubscribePendingTxs(txs)
 
 		for {
 			select {
-			case hashes := <-txHashes:
+			case txs := <-txs:
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
-				for _, h := range hashes {
-					notifier.Notify(rpcSub.ID, h)
+				for _, tx := range txs {
+					if fullTx != nil && *fullTx {
+						notifier.Notify(rpcSub.ID, tx)
+					} else {
+						notifier.Notify(rpcSub.ID, tx.Hash())
+					}
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
