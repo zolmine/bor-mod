@@ -1658,7 +1658,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash(ctx context.Context, has
 	borTx := false
 	// Try to return an already finalized transaction
 	tx, blockHash, blockNumber, index, err := s.b.GetTransaction(ctx, hash)
-	// fmt.Printf("GetTransactionByHash: %s\n", reflect.TypeOf(hash))
+	fmt.Printf("GetTransactionByHash: %s\n", reflect.TypeOf(hash))
 	fmt.Print(tx,ctx)
 	if err != nil {
 
