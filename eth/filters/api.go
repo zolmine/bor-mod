@@ -634,6 +634,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsComplite(ctx context.Context) 
 			case hashes := <-txHashes:
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
+				fmt.Print(ctx)
 				for _, h := range hashes {
 					fmt.Printf("h: %s\n", reflect.TypeOf(h))
 					// resultsT, _ := api.client.GetTransactionReceipt(ctx,h)
