@@ -78,15 +78,6 @@ func (ec *Client) BlockByHash(ctx context.Context, hash common.Hash) (*types.Blo
 	return ec.getBlock(ctx, "eth_getBlockByHash", hash, true)
 }
 
-func (ec *Client) TransactionReceiptsInBlock(ctx context.Context, blockNrOrHash rpc.BlockNumberOrHash) ([]map[string]interface{}, error) {
-	var rs []map[string]interface{}
-	err := ec.c.CallContext(ctx, &rs, "eth_getTransactionReceiptsByBlock", blockNrOrHash)
-	if err != nil {
-		return nil, err
-	}
-	return rs, err
-}
-
 // BlockByNumber returns a block from the current canonical chain. If number is nil, the
 // latest known block is returned.
 //
@@ -100,6 +91,13 @@ func (ec *Client) BlockByNumber(ctx context.Context, number *big.Int) (*types.Bl
 func (ec *Client) BlockNumber(ctx context.Context) (uint64, error) {
 	var result hexutil.Uint64
 	err := ec.c.CallContext(ctx, &result, "eth_blockNumber")
+	return uint64(result), err
+}
+
+// PeerCount returns the number of p2p peers as reported by the net_peerCount method.
+func (ec *Client) PeerCount(ctx context.Context) (uint64, error) {
+	var result hexutil.Uint64
+	err := ec.c.CallContext(ctx, &result, "net_peerCount")
 	return uint64(result), err
 }
 
@@ -132,6 +130,9 @@ func (ec *Client) getBlock(ctx context.Context, method string, args ...interface
 	}
 	if head.UncleHash != types.EmptyUncleHash && len(body.UncleHashes) == 0 {
 		return nil, fmt.Errorf("server returned empty uncle list but block header indicates uncles")
+	}
+	if head.TxHash == types.EmptyRootHash && len(body.Transactions) > 0 {
+		return nil, fmt.Errorf("server returned non-empty transaction list but block header indicates no transactions")
 	}
 	if head.TxHash != types.EmptyRootHash && len(body.Transactions) == 0 {
 		return nil, fmt.Errorf("server returned empty transaction list but block header indicates transactions")
@@ -213,9 +214,7 @@ func (tx *rpcTransaction) UnmarshalJSON(msg []byte) error {
 // TransactionByHash returns the transaction with the given hash.
 func (ec *Client) TransactionByHash(ctx context.Context, hash common.Hash) (tx *types.Transaction, isPending bool, err error) {
 	var json *rpcTransaction
-	fmt.Print(ctx,hash)
 	err = ec.c.CallContext(ctx, &json, "eth_getTransactionByHash", hash)
-	fmt.Print(ctx,hash)
 	if err != nil {
 		return nil, false, err
 	} else if json == nil {

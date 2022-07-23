@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"math/big"
 	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -31,7 +32,6 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/consensus"
 	"github.com/ethereum/go-ethereum/consensus/beacon"
-	"github.com/ethereum/go-ethereum/consensus/bor"
 	"github.com/ethereum/go-ethereum/consensus/clique"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/bloombits"
@@ -94,7 +94,7 @@ type Ethereum struct {
 	etherbase common.Address
 
 	networkID     uint64
-	netRPCService *ethapi.PublicNetAPI
+	netRPCService *ethapi.NetAPI
 
 	p2pServer *p2p.Server
 
@@ -137,11 +137,17 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 	if err != nil {
 		return nil, err
 	}
-	chainConfig, genesisHash, genesisErr := core.SetupGenesisBlockWithOverride(chainDb, config.Genesis, config.OverrideArrowGlacier, config.OverrideTerminalTotalDifficulty)
+	chainConfig, genesisHash, genesisErr := core.SetupGenesisBlockWithOverride(chainDb, config.Genesis, config.OverrideGrayGlacier, config.OverrideTerminalTotalDifficulty)
 	if _, ok := genesisErr.(*params.ConfigCompatError); genesisErr != nil && !ok {
 		return nil, genesisErr
 	}
-	log.Info("Initialised chain configuration", "config", chainConfig)
+	log.Info("")
+	log.Info(strings.Repeat("-", 153))
+	for _, line := range strings.Split(chainConfig.String(), "\n") {
+		log.Info(line)
+	}
+	log.Info(strings.Repeat("-", 153))
+	log.Info("")
 
 	if err := pruner.RecoverPruning(stack.ResolvePath(""), chainDb, stack.ResolvePath(config.TrieCleanCacheJournal)); err != nil {
 		log.Error("Failed to recover state", "error", err)
@@ -153,7 +159,7 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		chainDb:           chainDb,
 		eventMux:          stack.EventMux(),
 		accountManager:    stack.AccountManager(),
-		engine:            nil,
+		engine:            ethconfig.CreateConsensusEngine(stack, chainConfig, &ethashConfig, config.Miner.Notify, config.Miner.Noverify, chainDb),
 		closeBloomHandler: make(chan struct{}),
 		networkID:         config.NetworkId,
 		gasPrice:          config.Miner.GasPrice,
@@ -163,22 +169,6 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		p2pServer:         stack.Server(),
 		shutdownTracker:   shutdowncheck.NewShutdownTracker(chainDb),
 	}
-
-	// START: Bor changes
-	eth.APIBackend = &EthAPIBackend{stack.Config().ExtRPCEnabled(), stack.Config().AllowUnprotectedTxs, eth, nil}
-	if eth.APIBackend.allowUnprotectedTxs {
-		log.Info("Unprotected transactions allowed")
-	}
-	gpoParams := config.GPO
-	if gpoParams.Default == nil {
-		gpoParams.Default = config.Miner.GasPrice
-	}
-	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
-
-	// create eth api and set engine
-	ethAPI := ethapi.NewPublicBlockChainAPI(eth.APIBackend)
-	eth.engine = ethconfig.CreateConsensusEngine(stack, chainConfig, config, config.Miner.Notify, config.Miner.Noverify, chainDb, ethAPI)
-	// END: Bor changes
 
 	bcVersion := rawdb.ReadDatabaseVersion(chainDb)
 	var dbVer = "<nil>"
@@ -217,12 +207,6 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 	if err != nil {
 		return nil, err
 	}
-	eth.engine.VerifyHeader(eth.blockchain, eth.blockchain.CurrentHeader(), true) // TODO think on it
-
-	// BOR changes
-	eth.APIBackend.gpo.ProcessCache()
-	// BOR changes
-
 	// Rewind the chain in case of an incompatible config upgrade.
 	if compat, ok := genesisErr.(*params.ConfigCompatError); ok {
 		log.Warn("Rewinding chain to upgrade configuration", "err", compat)
@@ -243,22 +227,32 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		checkpoint = params.TrustedCheckpoints[genesisHash]
 	}
 	if eth.handler, err = newHandler(&handlerConfig{
-		Database:           chainDb,
-		Chain:              eth.blockchain,
-		TxPool:             eth.txPool,
-		Merger:             merger,
-		Network:            config.NetworkId,
-		Sync:               config.SyncMode,
-		BloomCache:         uint64(cacheLimit),
-		EventMux:           eth.eventMux,
-		Checkpoint:         checkpoint,
-		PeerRequiredBlocks: config.PeerRequiredBlocks,
+		Database:       chainDb,
+		Chain:          eth.blockchain,
+		TxPool:         eth.txPool,
+		Merger:         merger,
+		Network:        config.NetworkId,
+		Sync:           config.SyncMode,
+		BloomCache:     uint64(cacheLimit),
+		EventMux:       eth.eventMux,
+		Checkpoint:     checkpoint,
+		RequiredBlocks: config.RequiredBlocks,
 	}); err != nil {
 		return nil, err
 	}
 
 	eth.miner = miner.New(eth, &config.Miner, chainConfig, eth.EventMux(), eth.engine, eth.isLocalBlock)
 	eth.miner.SetExtra(makeExtraData(config.Miner.ExtraData))
+
+	eth.APIBackend = &EthAPIBackend{stack.Config().ExtRPCEnabled(), stack.Config().AllowUnprotectedTxs, eth, nil}
+	if eth.APIBackend.allowUnprotectedTxs {
+		log.Info("Unprotected transactions allowed")
+	}
+	gpoParams := config.GPO
+	if gpoParams.Default == nil {
+		gpoParams.Default = config.Miner.GasPrice
+	}
+	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
 
 	// Setup DNS discovery iterators.
 	dnsclient := dnsdisc.NewClient(dnsdisc.Config{})
@@ -272,7 +266,7 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 	}
 
 	// Start the RPC service
-	eth.netRPCService = ethapi.NewPublicNetAPI(eth.p2pServer, config.NetworkId)
+	eth.netRPCService = ethapi.NewNetAPI(eth.p2pServer, config.NetworkId)
 
 	// Register the backend on the node
 	stack.RegisterAPIs(eth.APIs())
@@ -290,7 +284,7 @@ func makeExtraData(extra []byte) []byte {
 		// create default extradata
 		extra, _ = rlp.EncodeToBytes([]interface{}{
 			uint(params.VersionMajor<<16 | params.VersionMinor<<8 | params.VersionPatch),
-			"bor",
+			"geth",
 			runtime.Version(),
 			runtime.GOOS,
 		})
@@ -310,58 +304,36 @@ func (s *Ethereum) APIs() []rpc.API {
 	// Append any APIs exposed explicitly by the consensus engine
 	apis = append(apis, s.engine.APIs(s.BlockChain())...)
 
-	// BOR change starts
-	// set genesis to public filter api
-	publicFilterAPI := filters.NewPublicFilterAPI(s.APIBackend, false, 5*time.Minute, s.config.BorLogs)
-	// avoiding constructor changed by introducing new method to set genesis
-	publicFilterAPI.SetChainConfig(s.blockchain.Config())
-	// BOR change ends
-
 	// Append all the local APIs and return
 	return append(apis, []rpc.API{
 		{
 			Namespace: "eth",
 			Version:   "1.0",
-			Service:   NewPublicEthereumAPI(s),
-			Public:    true,
-		}, {
-			Namespace: "eth",
-			Version:   "1.0",
-			Service:   NewPublicMinerAPI(s),
-			Public:    true,
-		}, {
-			Namespace: "eth",
-			Version:   "1.0",
-			Service:   downloader.NewPublicDownloaderAPI(s.handler.downloader, s.eventMux),
-			Public:    true,
+			Service:   NewEthereumAPI(s),
 		}, {
 			Namespace: "miner",
 			Version:   "1.0",
-			Service:   NewPrivateMinerAPI(s),
-			Public:    false,
+			Service:   NewMinerAPI(s),
 		}, {
 			Namespace: "eth",
 			Version:   "1.0",
-			Service:   publicFilterAPI, // BOR related change
-			Public:    true,
+			Service:   downloader.NewDownloaderAPI(s.handler.downloader, s.eventMux),
+		}, {
+			Namespace: "eth",
+			Version:   "1.0",
+			Service:   filters.NewFilterAPI(s.APIBackend, false, 5*time.Minute),
 		}, {
 			Namespace: "admin",
 			Version:   "1.0",
-			Service:   NewPrivateAdminAPI(s),
+			Service:   NewAdminAPI(s),
 		}, {
 			Namespace: "debug",
 			Version:   "1.0",
-			Service:   NewPublicDebugAPI(s),
-			Public:    true,
-		}, {
-			Namespace: "debug",
-			Version:   "1.0",
-			Service:   NewPrivateDebugAPI(s),
+			Service:   NewDebugAPI(s),
 		}, {
 			Namespace: "net",
 			Version:   "1.0",
 			Service:   s.netRPCService,
-			Public:    true,
 		},
 	}...)
 }
@@ -501,14 +473,6 @@ func (s *Ethereum) StartMining(threads int) error {
 			}
 			cli.Authorize(eb, wallet.SignData)
 		}
-		if bor, ok := s.engine.(*bor.Bor); ok {
-			wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
-			if wallet == nil || err != nil {
-				log.Error("Etherbase account unavailable locally", "err", err)
-				return fmt.Errorf("signer missing: %v", err)
-			}
-			bor.Authorize(eb, wallet.SignData)
-		}
 		// If mining is started, we can disable the transaction rejection mechanism
 		// introduced to speed sync times.
 		atomic.StoreUint32(&s.handler.acceptTxs, 1)
@@ -598,12 +562,10 @@ func (s *Ethereum) Stop() error {
 	// Then stop everything else.
 	s.bloomIndexer.Close()
 	close(s.closeBloomHandler)
-
-	// closing consensus engine first, as miner has deps on it
-	s.engine.Close()
 	s.txPool.Stop()
-	s.blockchain.Stop()
 	s.miner.Close()
+	s.blockchain.Stop()
+	s.engine.Close()
 
 	// Clean shutdown marker as the last thing before closing db
 	s.shutdownTracker.Stop()
@@ -612,13 +574,4 @@ func (s *Ethereum) Stop() error {
 	s.eventMux.Stop()
 
 	return nil
-}
-
-//
-// Bor related methods
-//
-
-// SetBlockchain set blockchain while testing
-func (s *Ethereum) SetBlockchain(blockchain *core.BlockChain) {
-	s.blockchain = blockchain
 }
