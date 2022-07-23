@@ -477,21 +477,10 @@ func (f *BlockFetcher) loop() {
 							}
 							defer req.Close()
 
-							timeout := time.NewTimer(2 * fetchTimeout) // 2x leeway before dropping the peer
-							defer timeout.Stop()
+							res := <-resCh
+							res.Done <- nil
 
-							select {
-							case res := <-resCh:
-								res.Done <- nil
-								f.FilterHeaders(peer, *res.Res.(*eth.BlockHeadersPacket), time.Now().Add(res.Time))
-
-							case <-timeout.C:
-								// The peer didn't respond in time. The request
-								// was already rescheduled at this point, we were
-								// waiting for a catchup. With an unresponsive
-								// peer however, it's a protocol violation.
-								f.dropPeer(peer)
-							}
+							f.FilterHeaders(peer, *res.Res.(*eth.BlockHeadersPacket), time.Now().Add(res.Time))
 						}(hash)
 					}
 				}(peer)
@@ -534,23 +523,11 @@ func (f *BlockFetcher) loop() {
 					}
 					defer req.Close()
 
-					timeout := time.NewTimer(2 * fetchTimeout) // 2x leeway before dropping the peer
-					defer timeout.Stop()
+					res := <-resCh
+					res.Done <- nil
 
-					select {
-					case res := <-resCh:
-						res.Done <- nil
-
-						txs, uncles := res.Res.(*eth.BlockBodiesPacket).Unpack()
-						f.FilterBodies(peer, txs, uncles, time.Now())
-
-					case <-timeout.C:
-						// The peer didn't respond in time. The request
-						// was already rescheduled at this point, we were
-						// waiting for a catchup. With an unresponsive
-						// peer however, it's a protocol violation.
-						f.dropPeer(peer)
-					}
+					txs, uncles := res.Res.(*eth.BlockBodiesPacket).Unpack()
+					f.FilterBodies(peer, txs, uncles, time.Now())
 				}(peer, hashes)
 			}
 			// Schedule the next fetch if blocks are still pending

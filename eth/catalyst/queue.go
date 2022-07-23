@@ -18,7 +18,6 @@ package catalyst
 
 import (
 	"sync"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/beacon"
@@ -35,52 +34,11 @@ const maxTrackedPayloads = 10
 // latest one; but have a slight wiggle room for non-ideal conditions.
 const maxTrackedHeaders = 10
 
-// payload wraps the miner's block production channel, allowing the mined block
-// to be retrieved later upon the GetPayload engine API call.
-type payload struct {
-	lock   sync.Mutex
-	done   bool
-	empty  *types.Block
-	block  *types.Block
-	result chan *types.Block
-}
-
-// resolve extracts the generated full block from the given channel if possible
-// or fallback to empty block as an alternative.
-func (req *payload) resolve() *beacon.ExecutableDataV1 {
-	// this function can be called concurrently, prevent any
-	// concurrency issue in the first place.
-	req.lock.Lock()
-	defer req.lock.Unlock()
-
-	// Try to resolve the full block first if it's not obtained
-	// yet. The returned block can be nil if the generation fails.
-
-	if !req.done {
-		timeout := time.NewTimer(500 * time.Millisecond)
-		defer timeout.Stop()
-
-		select {
-		case req.block = <-req.result:
-			req.done = true
-		case <-timeout.C:
-			// TODO(rjl49345642, Marius), should we keep this
-			// 100ms timeout allowance? Why not just use the
-			// default and then fallback to empty directly?
-		}
-	}
-
-	if req.block != nil {
-		return beacon.BlockToExecutableData(req.block)
-	}
-	return beacon.BlockToExecutableData(req.empty)
-}
-
 // payloadQueueItem represents an id->payload tuple to store until it's retrieved
 // or evicted.
 type payloadQueueItem struct {
-	id   beacon.PayloadID
-	data *payload
+	id      beacon.PayloadID
+	payload *beacon.ExecutableDataV1
 }
 
 // payloadQueue tracks the latest handful of constructed payloads to be retrieved
@@ -99,14 +57,14 @@ func newPayloadQueue() *payloadQueue {
 }
 
 // put inserts a new payload into the queue at the given id.
-func (q *payloadQueue) put(id beacon.PayloadID, data *payload) {
+func (q *payloadQueue) put(id beacon.PayloadID, data *beacon.ExecutableDataV1) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
 	copy(q.payloads[1:], q.payloads)
 	q.payloads[0] = &payloadQueueItem{
-		id:   id,
-		data: data,
+		id:      id,
+		payload: data,
 	}
 }
 
@@ -120,7 +78,7 @@ func (q *payloadQueue) get(id beacon.PayloadID) *beacon.ExecutableDataV1 {
 			return nil // no more items
 		}
 		if item.id == id {
-			return item.data.resolve()
+			return item.payload
 		}
 	}
 	return nil

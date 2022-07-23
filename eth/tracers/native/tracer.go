@@ -45,9 +45,6 @@ func init() {
 	tracers.RegisterLookup(false, lookup)
 }
 
-// ctorFn is the constructor signature of a native tracer.
-type ctorFn = func(*tracers.Context) tracers.Tracer
-
 /*
 ctors is a map of package-local tracer constructors.
 
@@ -60,12 +57,12 @@ The go spec (https://golang.org/ref/spec#Package_initialization) says
 
 Hence, we cannot make the map in init, but must make it upon first use.
 */
-var ctors map[string]ctorFn
+var ctors map[string]func() tracers.Tracer
 
 // register is used by native tracers to register their presence.
-func register(name string, ctor ctorFn) {
+func register(name string, ctor func() tracers.Tracer) {
 	if ctors == nil {
-		ctors = make(map[string]ctorFn)
+		ctors = make(map[string]func() tracers.Tracer)
 	}
 	ctors[name] = ctor
 }
@@ -73,10 +70,10 @@ func register(name string, ctor ctorFn) {
 // lookup returns a tracer, if one can be matched to the given name.
 func lookup(name string, ctx *tracers.Context) (tracers.Tracer, error) {
 	if ctors == nil {
-		ctors = make(map[string]ctorFn)
+		ctors = make(map[string]func() tracers.Tracer)
 	}
 	if ctor, ok := ctors[name]; ok {
-		return ctor(ctx), nil
+		return ctor(), nil
 	}
 	return nil, errors.New("no tracer found")
 }

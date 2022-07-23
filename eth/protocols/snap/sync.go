@@ -422,8 +422,6 @@ type Syncer struct {
 	storageSynced  uint64             // Number of storage slots downloaded
 	storageBytes   common.StorageSize // Number of storage trie bytes persisted to disk
 
-	extProgress *SyncProgress // progress that can be exposed to external caller.
-
 	// Request tracking during healing phase
 	trienodeHealIdlers map[string]struct{} // Peers that aren't serving trie node requests
 	bytecodeHealIdlers map[string]struct{} // Peers that aren't serving bytecode requests
@@ -479,8 +477,6 @@ func NewSyncer(db ethdb.KeyValueStore) *Syncer {
 		trienodeHealReqs: make(map[uint64]*trienodeHealRequest),
 		bytecodeHealReqs: make(map[uint64]*bytecodeHealRequest),
 		stateWriter:      db.NewBatch(),
-
-		extProgress: new(SyncProgress),
 	}
 }
 
@@ -637,21 +633,6 @@ func (s *Syncer) Sync(root common.Hash, cancel chan struct{}) error {
 			s.assignTrienodeHealTasks(trienodeHealResps, trienodeHealReqFails, cancel)
 			s.assignBytecodeHealTasks(bytecodeHealResps, bytecodeHealReqFails, cancel)
 		}
-		// Update sync progress
-		s.lock.Lock()
-		s.extProgress = &SyncProgress{
-			AccountSynced:      s.accountSynced,
-			AccountBytes:       s.accountBytes,
-			BytecodeSynced:     s.bytecodeSynced,
-			BytecodeBytes:      s.bytecodeBytes,
-			StorageSynced:      s.storageSynced,
-			StorageBytes:       s.storageBytes,
-			TrienodeHealSynced: s.trienodeHealSynced,
-			TrienodeHealBytes:  s.trienodeHealBytes,
-			BytecodeHealSynced: s.bytecodeHealSynced,
-			BytecodeHealBytes:  s.bytecodeHealBytes,
-		}
-		s.lock.Unlock()
 		// Wait for something to happen
 		select {
 		case <-s.update:
@@ -712,7 +693,7 @@ func (s *Syncer) loadSyncStatus() {
 				}
 				task.genTrie = trie.NewStackTrie(task.genBatch)
 
-				for accountHash, subtasks := range task.SubTasks {
+				for _, subtasks := range task.SubTasks {
 					for _, subtask := range subtasks {
 						subtask.genBatch = ethdb.HookedBatch{
 							Batch: s.db.NewBatch(),
@@ -720,13 +701,10 @@ func (s *Syncer) loadSyncStatus() {
 								s.storageBytes += common.StorageSize(len(key) + len(value))
 							},
 						}
-						subtask.genTrie = trie.NewStackTrieWithOwner(subtask.genBatch, accountHash)
+						subtask.genTrie = trie.NewStackTrie(subtask.genBatch)
 					}
 				}
 			}
-			s.lock.Lock()
-			defer s.lock.Unlock()
-
 			s.snapped = len(s.tasks) == 0
 
 			s.accountSynced = progress.AccountSynced
@@ -824,12 +802,25 @@ func (s *Syncer) saveSyncStatus() {
 func (s *Syncer) Progress() (*SyncProgress, *SyncPending) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
+
+	progress := &SyncProgress{
+		AccountSynced:      s.accountSynced,
+		AccountBytes:       s.accountBytes,
+		BytecodeSynced:     s.bytecodeSynced,
+		BytecodeBytes:      s.bytecodeBytes,
+		StorageSynced:      s.storageSynced,
+		StorageBytes:       s.storageBytes,
+		TrienodeHealSynced: s.trienodeHealSynced,
+		TrienodeHealBytes:  s.trienodeHealBytes,
+		BytecodeHealSynced: s.bytecodeHealSynced,
+		BytecodeHealBytes:  s.bytecodeHealBytes,
+	}
 	pending := new(SyncPending)
 	if s.healer != nil {
 		pending.TrienodeHeal = uint64(len(s.healer.trieTasks))
 		pending.BytecodeHeal = uint64(len(s.healer.codeTasks))
 	}
-	return s.extProgress, pending
+	return progress, pending
 }
 
 // cleanAccountTasks removes account range retrieval tasks that have already been
@@ -1331,13 +1322,12 @@ func (s *Syncer) assignTrienodeHealTasks(success chan *trienodeHealResponse, fai
 
 			hashes = append(hashes, hash)
 			paths = append(paths, pathset)
+			pathsets = append(pathsets, [][]byte(pathset)) // TODO(karalabe): group requests by account hash
 
 			if len(hashes) >= cap {
 				break
 			}
 		}
-		// Group requests by account hash
-		hashes, paths, pathsets = sortByAccountPath(hashes, paths)
 		req := &trienodeHealRequest{
 			peer:    idle,
 			id:      reqid,
@@ -1971,7 +1961,7 @@ func (s *Syncer) processStorageResponse(res *storageResponse) {
 						Last:     r.End(),
 						root:     acc.Root,
 						genBatch: batch,
-						genTrie:  trie.NewStackTrieWithOwner(batch, account),
+						genTrie:  trie.NewStackTrie(batch),
 					})
 					for r.Next() {
 						batch := ethdb.HookedBatch{
@@ -1985,7 +1975,7 @@ func (s *Syncer) processStorageResponse(res *storageResponse) {
 							Last:     r.End(),
 							root:     acc.Root,
 							genBatch: batch,
-							genTrie:  trie.NewStackTrieWithOwner(batch, account),
+							genTrie:  trie.NewStackTrie(batch),
 						})
 					}
 					for _, task := range tasks {
@@ -2030,7 +2020,7 @@ func (s *Syncer) processStorageResponse(res *storageResponse) {
 		slots += len(res.hashes[i])
 
 		if i < len(res.hashes)-1 || res.subTask == nil {
-			tr := trie.NewStackTrieWithOwner(batch, account)
+			tr := trie.NewStackTrie(batch)
 			for j := 0; j < len(res.hashes[i]); j++ {
 				tr.Update(res.hashes[i][j][:], res.slots[i][j])
 			}
@@ -2781,7 +2771,7 @@ func (s *Syncer) onHealState(paths [][]byte, value []byte) error {
 	if len(paths) == 1 {
 		var account types.StateAccount
 		if err := rlp.DecodeBytes(value, &account); err != nil {
-			return nil // Returning the error here would drop the remote peer
+			return nil
 		}
 		blob := snapshot.SlimAccountRLP(account.Nonce, account.Balance, account.Root, account.CodeHash)
 		rawdb.WriteAccountSnapshot(s.stateWriter, common.BytesToHash(paths[0]), blob)
@@ -2908,77 +2898,4 @@ func (s *capacitySort) Less(i, j int) bool {
 func (s *capacitySort) Swap(i, j int) {
 	s.ids[i], s.ids[j] = s.ids[j], s.ids[i]
 	s.caps[i], s.caps[j] = s.caps[j], s.caps[i]
-}
-
-// healRequestSort implements the Sort interface, allowing sorting trienode
-// heal requests, which is a prerequisite for merging storage-requests.
-type healRequestSort struct {
-	hashes []common.Hash
-	paths  []trie.SyncPath
-}
-
-func (t *healRequestSort) Len() int {
-	return len(t.hashes)
-}
-
-func (t *healRequestSort) Less(i, j int) bool {
-	a := t.paths[i]
-	b := t.paths[j]
-	switch bytes.Compare(a[0], b[0]) {
-	case -1:
-		return true
-	case 1:
-		return false
-	}
-	// identical first part
-	if len(a) < len(b) {
-		return true
-	}
-	if len(b) < len(a) {
-		return false
-	}
-	if len(a) == 2 {
-		return bytes.Compare(a[1], b[1]) < 0
-	}
-	return false
-}
-
-func (t *healRequestSort) Swap(i, j int) {
-	t.hashes[i], t.hashes[j] = t.hashes[j], t.hashes[i]
-	t.paths[i], t.paths[j] = t.paths[j], t.paths[i]
-}
-
-// Merge merges the pathsets, so that several storage requests concerning the
-// same account are merged into one, to reduce bandwidth.
-// OBS: This operation is moot if t has not first been sorted.
-func (t *healRequestSort) Merge() []TrieNodePathSet {
-	var result []TrieNodePathSet
-	for _, path := range t.paths {
-		pathset := TrieNodePathSet([][]byte(path))
-		if len(path) == 1 {
-			// It's an account reference.
-			result = append(result, pathset)
-		} else {
-			// It's a storage reference.
-			end := len(result) - 1
-			if len(result) == 0 || !bytes.Equal(pathset[0], result[end][0]) {
-				// The account doesn't doesn't match last, create a new entry.
-				result = append(result, pathset)
-			} else {
-				// It's the same account as the previous one, add to the storage
-				// paths of that request.
-				result[end] = append(result[end], pathset[1])
-			}
-		}
-	}
-	return result
-}
-
-// sortByAccountPath takes hashes and paths, and sorts them. After that, it generates
-// the TrieNodePaths and merges paths which belongs to the same account path.
-func sortByAccountPath(hashes []common.Hash, paths []trie.SyncPath) ([]common.Hash, []trie.SyncPath, []TrieNodePathSet) {
-	n := &healRequestSort{hashes, paths}
-	sort.Sort(n)
-	pathsets := n.Merge()
-	return n.hashes, n.paths, pathsets
 }

@@ -24,6 +24,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/eth/tracers"
@@ -46,12 +47,11 @@ type prestateTracer struct {
 	prestate  prestate
 	create    bool
 	to        common.Address
-	gasLimit  uint64 // Amount of gas bought for the whole tx
 	interrupt uint32 // Atomic flag to signal execution interruption
 	reason    error  // Textual reason for the interruption
 }
 
-func newPrestateTracer(ctx *tracers.Context) tracers.Tracer {
+func newPrestateTracer() tracers.Tracer {
 	// First callframe contains tx context info
 	// and is populated on start and end.
 	return &prestateTracer{prestate: prestate{}}
@@ -63,6 +63,14 @@ func (t *prestateTracer) CaptureStart(env *vm.EVM, from common.Address, to commo
 	t.create = create
 	t.to = to
 
+	// Compute intrinsic gas
+	isHomestead := env.ChainConfig().IsHomestead(env.Context.BlockNumber)
+	isIstanbul := env.ChainConfig().IsIstanbul(env.Context.BlockNumber)
+	intrinsicGas, err := core.IntrinsicGas(input, nil, create, isHomestead, isIstanbul)
+	if err != nil {
+		return
+	}
+
 	t.lookupAccount(from)
 	t.lookupAccount(to)
 
@@ -71,11 +79,17 @@ func (t *prestateTracer) CaptureStart(env *vm.EVM, from common.Address, to commo
 	toBal = new(big.Int).Sub(toBal, value)
 	t.prestate[to].Balance = hexutil.EncodeBig(toBal)
 
-	// The sender balance is after reducing: value and gasLimit.
+	// The sender balance is after reducing: value, gasLimit, intrinsicGas.
 	// We need to re-add them to get the pre-tx balance.
 	fromBal := hexutil.MustDecodeBig(t.prestate[from].Balance)
 	gasPrice := env.TxContext.GasPrice
-	consumedGas := new(big.Int).Mul(gasPrice, new(big.Int).SetUint64(t.gasLimit))
+	consumedGas := new(big.Int).Mul(
+		gasPrice,
+		new(big.Int).Add(
+			new(big.Int).SetUint64(intrinsicGas),
+			new(big.Int).SetUint64(gas),
+		),
+	)
 	fromBal.Add(fromBal, new(big.Int).Add(value, consumedGas))
 	t.prestate[from].Balance = hexutil.EncodeBig(fromBal)
 	t.prestate[from].Nonce--
@@ -130,12 +144,6 @@ func (t *prestateTracer) CaptureEnter(typ vm.OpCode, from common.Address, to com
 // execute any code.
 func (t *prestateTracer) CaptureExit(output []byte, gasUsed uint64, err error) {
 }
-
-func (t *prestateTracer) CaptureTxStart(gasLimit uint64) {
-	t.gasLimit = gasLimit
-}
-
-func (t *prestateTracer) CaptureTxEnd(restGas uint64) {}
 
 // GetResult returns the json-encoded nested list of call traces, and any
 // error arising from the encoding or forceful termination (via `Stop`).

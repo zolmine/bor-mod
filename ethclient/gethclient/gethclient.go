@@ -114,7 +114,6 @@ func (ec *Client) GetProof(ctx context.Context, account common.Address, keys []s
 		Nonce:        uint64(res.Nonce),
 		CodeHash:     res.CodeHash,
 		StorageHash:  res.StorageHash,
-		StorageProof: storageResults,
 	}
 	return &result, err
 }
@@ -176,12 +175,7 @@ func (ec *Client) GetNodeInfo(ctx context.Context) (*p2p.NodeInfo, error) {
 }
 
 // SubscribePendingTransactions subscribes to new pending transactions.
-func (ec *Client) SubscribePendingTransactions(ctx context.Context, ch chan<- *types.Transaction) (*rpc.ClientSubscription, error) {
-	return ec.c.EthSubscribe(ctx, ch, "newPendingTransactions", true)
-}
-
-// SubscribePendingTransactionHashes subscribes to new pending transaction hashes.
-func (ec *Client) SubscribePendingTransactionHashes(ctx context.Context, ch chan<- common.Hash) (*rpc.ClientSubscription, error) {
+func (ec *Client) SubscribePendingTransactions(ctx context.Context, ch chan<- common.Hash) (*rpc.ClientSubscription, error) {
 	return ec.c.EthSubscribe(ctx, ch, "newPendingTransactions")
 }
 

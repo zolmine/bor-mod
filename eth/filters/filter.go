@@ -36,7 +36,8 @@ type Backend interface {
 	HeaderByHash(ctx context.Context, blockHash common.Hash) (*types.Header, error)
 	GetReceipts(ctx context.Context, blockHash common.Hash) (types.Receipts, error)
 	GetLogs(ctx context.Context, blockHash common.Hash) ([][]*types.Log, error)
-	PendingBlockAndReceipts() (*types.Block, types.Receipts)
+	GetBorBlockReceipt(ctx context.Context, blockHash common.Hash) (*types.Receipt, error)
+	GetBorBlockLogs(ctx context.Context, blockHash common.Hash) ([]*types.Log, error)
 
 	SubscribeNewTxsEvent(chan<- core.NewTxsEvent) event.Subscription
 	SubscribeChainEvent(ch chan<- core.ChainEvent) event.Subscription
@@ -46,6 +47,8 @@ type Backend interface {
 
 	BloomStatus() (uint64, uint64)
 	ServiceFilter(ctx context.Context, session *bloombits.MatcherSession)
+
+	SubscribeStateSyncEvent(ch chan<- core.StateSyncEvent) event.Subscription
 }
 
 // Filter can be used to retrieve and filter logs.
@@ -129,35 +132,26 @@ func (f *Filter) Logs(ctx context.Context) ([]*types.Log, error) {
 		}
 		return f.blockLogs(ctx, header)
 	}
-	// Short-cut if all we care about is pending logs
-	if f.begin == rpc.PendingBlockNumber.Int64() {
-		if f.end != rpc.PendingBlockNumber.Int64() {
-			return nil, errors.New("invalid block range")
-		}
-		return f.pendingLogs()
-	}
 	// Figure out the limits of the filter range
 	header, _ := f.backend.HeaderByNumber(ctx, rpc.LatestBlockNumber)
 	if header == nil {
 		return nil, nil
 	}
-	var (
-		head    = header.Number.Uint64()
-		end     = uint64(f.end)
-		pending = f.end == rpc.PendingBlockNumber.Int64()
-	)
-	if f.begin == rpc.LatestBlockNumber.Int64() {
+	head := header.Number.Uint64()
+
+	if f.begin == -1 {
 		f.begin = int64(head)
 	}
-	if f.end == rpc.LatestBlockNumber.Int64() || f.end == rpc.PendingBlockNumber.Int64() {
+	end := uint64(f.end)
+	if f.end == -1 {
 		end = head
 	}
 	// Gather all indexed logs, and finish with non indexed ones
 	var (
-		logs           []*types.Log
-		err            error
-		size, sections = f.backend.BloomStatus()
+		logs []*types.Log
+		err  error
 	)
+	size, sections := f.backend.BloomStatus()
 	if indexed := sections * size; indexed > uint64(f.begin) {
 		if indexed > end {
 			logs, err = f.indexedLogs(ctx, end)
@@ -170,13 +164,6 @@ func (f *Filter) Logs(ctx context.Context) ([]*types.Log, error) {
 	}
 	rest, err := f.unindexedLogs(ctx, end)
 	logs = append(logs, rest...)
-	if pending {
-		pendingLogs, err := f.pendingLogs()
-		if err != nil {
-			return nil, err
-		}
-		logs = append(logs, pendingLogs...)
-	}
 	return logs, err
 }
 
@@ -289,19 +276,6 @@ func (f *Filter) checkMatches(ctx context.Context, header *types.Header) (logs [
 	return nil, nil
 }
 
-// pendingLogs returns the logs matching the filter criteria within the pending block.
-func (f *Filter) pendingLogs() ([]*types.Log, error) {
-	block, receipts := f.backend.PendingBlockAndReceipts()
-	if bloomFilter(block.Bloom(), f.addresses, f.topics) {
-		var unfiltered []*types.Log
-		for _, r := range receipts {
-			unfiltered = append(unfiltered, r.Logs...)
-		}
-		return filterLogs(unfiltered, nil, nil, f.addresses, f.topics), nil
-	}
-	return nil, nil
-}
-
 func includes(addresses []common.Address, a common.Address) bool {
 	for _, addr := range addresses {
 		if addr == a {
@@ -329,7 +303,7 @@ Logs:
 		}
 		// If the to filtered topics is greater than the amount of topics in logs, skip.
 		if len(topics) > len(log.Topics) {
-			continue
+			continue Logs
 		}
 		for i, sub := range topics {
 			match := len(sub) == 0 // empty rule set == wildcard
