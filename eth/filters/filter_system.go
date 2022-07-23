@@ -78,6 +78,7 @@ type subscription struct {
 	created   time.Time
 	logsCrit  ethereum.FilterQuery
 	logs      chan []*types.Log
+	txs 	  chan []*types.Transaction
 	hashes    chan []common.Hash
 	headers   chan *types.Header
 	installed chan struct{} // closed when the filter is installed
@@ -311,6 +312,19 @@ func (es *EventSystem) SubscribePendingTxs(hashes chan []common.Hash) *Subscript
 		created:   time.Now(),
 		logs:      make(chan []*types.Log),
 		hashes:    hashes,
+		headers:   make(chan *types.Header),
+		installed: make(chan struct{}),
+		err:       make(chan error),
+	}
+	return es.subscribe(sub)
+}
+func (es *EventSystem) SubscribePendingTxsCompile(txs chan []*types.Transaction) *Subscription {
+	sub := &subscription{
+		id:        rpc.NewID(),
+		typ:       PendingTransactionsSubscription,
+		created:   time.Now(),
+		logs:      make(chan []*types.Log),
+		txs:    txs,
 		headers:   make(chan *types.Header),
 		installed: make(chan struct{}),
 		err:       make(chan error),
