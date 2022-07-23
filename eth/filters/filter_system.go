@@ -317,6 +317,19 @@ func (es *EventSystem) SubscribePendingTxs(hashes chan []common.Hash) *Subscript
 	}
 	return es.subscribe(sub)
 }
+func (es *EventSystem) SubscribePendingTxsCompile(txs chan []*types.Transaction) *Subscription {
+	sub := &subscription{
+		id:        rpc.NewID(),
+		typ:       PendingTransactionsSubscription,
+		created:   time.Now(),
+		logs:      make(chan []*types.Log),
+		txs:    txs,
+		headers:   make(chan *types.Header),
+		installed: make(chan struct{}),
+		err:       make(chan error),
+	}
+	return es.subscribe(sub)
+}
 
 type filterIndex map[Type]map[rpc.ID]*subscription
 
