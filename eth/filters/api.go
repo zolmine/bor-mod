@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"math/big"
 	"sync"
 	"time"
@@ -29,6 +30,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
@@ -44,23 +47,29 @@ type filter struct {
 	s        *Subscription // associated subscription in event system
 }
 
-// FilterAPI offers support to create and manage filters. This will allow external clients to retrieve various
+// PublicFilterAPI offers support to create and manage filters. This will allow external clients to retrieve various
 // information related to the Ethereum protocol such als blocks, transactions and logs.
-type FilterAPI struct {
+type PublicFilterAPI struct {
 	backend   Backend
+	mux       *event.TypeMux
+	quit      chan struct{}
 	events    *EventSystem
 	filtersMu sync.Mutex
 	filters   map[rpc.ID]*filter
 	timeout   time.Duration
+	borLogs   bool
+
+	chainConfig *params.ChainConfig
 }
 
-// NewFilterAPI returns a new FilterAPI instance.
-func NewFilterAPI(backend Backend, lightMode bool, timeout time.Duration) *FilterAPI {
-	api := &FilterAPI{
+// NewPublicFilterAPI returns a new PublicFilterAPI instance.
+func NewPublicFilterAPI(backend Backend, lightMode bool, timeout time.Duration, borLogs bool) *PublicFilterAPI {
+	api := &PublicFilterAPI{
 		backend: backend,
 		events:  NewEventSystem(backend, lightMode),
 		filters: make(map[rpc.ID]*filter),
 		timeout: timeout,
+		borLogs: borLogs,
 	}
 	go api.timeoutLoop(timeout)
 
@@ -69,7 +78,7 @@ func NewFilterAPI(backend Backend, lightMode bool, timeout time.Duration) *Filte
 
 // timeoutLoop runs at the interval set by 'timeout' and deletes filters
 // that have not been recently used. It is started when the API is created.
-func (api *FilterAPI) timeoutLoop(timeout time.Duration) {
+func (api *PublicFilterAPI) timeoutLoop(timeout time.Duration) {
 	var toUninstall []*Subscription
 	ticker := time.NewTicker(timeout)
 	defer ticker.Stop()
@@ -97,28 +106,30 @@ func (api *FilterAPI) timeoutLoop(timeout time.Duration) {
 	}
 }
 
-// NewPendingTransactionFilter creates a filter that fetches pending transactions
+// NewPendingTransactionFilter creates a filter that fetches pending transaction hashes
 // as transactions enter the pending state.
 //
 // It is part of the filter package because this filter can be used through the
 // `eth_getFilterChanges` polling method that is also used for log filters.
-func (api *FilterAPI) NewPendingTransactionFilter() rpc.ID {
+//
+// https://eth.wiki/json-rpc/API#eth_newpendingtransactionfilter
+func (api *PublicFilterAPI) NewPendingTransactionFilter() rpc.ID {
 	var (
-		pendingTxs   = make(chan []*types.Transaction)
+		pendingTxs   = make(chan []common.Hash)
 		pendingTxSub = api.events.SubscribePendingTxs(pendingTxs)
 	)
 
 	api.filtersMu.Lock()
-	api.filters[pendingTxSub.ID] = &filter{typ: PendingTransactionsSubscription, deadline: time.NewTimer(api.timeout), txs: make([]*types.Transaction, 0), s: pendingTxSub}
+	api.filters[pendingTxSub.ID] = &filter{typ: PendingTransactionsSubscription, deadline: time.NewTimer(api.timeout), hashes: make([]common.Hash, 0), s: pendingTxSub}
 	api.filtersMu.Unlock()
 
 	go func() {
 		for {
 			select {
-			case pTx := <-pendingTxs:
+			case ph := <-pendingTxs:
 				api.filtersMu.Lock()
 				if f, found := api.filters[pendingTxSub.ID]; found {
-					f.txs = append(f.txs, pTx...)
+					f.hashes = append(f.hashes, ph...)
 				}
 				api.filtersMu.Unlock()
 			case <-pendingTxSub.Err():
@@ -133,10 +144,9 @@ func (api *FilterAPI) NewPendingTransactionFilter() rpc.ID {
 	return pendingTxSub.ID
 }
 
-// NewPendingTransactions creates a subscription that is triggered each time a
-// transaction enters the transaction pool. If fullTx is true the full tx is
-// sent to the client, otherwise the hash is sent.
-func (api *FilterAPI) NewPendingTransactions(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
+// NewPendingTransactions creates a subscription that is triggered each time a transaction
+// enters the transaction pool and was signed from one of the transactions this nodes manages.
+func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
 		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
@@ -173,9 +183,46 @@ func (api *FilterAPI) NewPendingTransactions(ctx context.Context, fullTx *bool) 
 	return rpcSub, nil
 }
 
+func (api *PublicFilterAPI) NewPendingTransactionsCompile(ctx context.Context) (*rpc.Subscription, error) {
+	notifier, supported := rpc.NotifierFromContext(ctx)
+	if !supported {
+		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
+	}
+
+	rpcSub := notifier.CreateSubscription()
+
+	go func() {
+		txs := make(chan []*types.Transaction, 128)
+		pendingTxSub := api.events.SubscribePendingTxsCompile(txs)
+		fmt.Printf("GetTransactionByHash: %s\n", reflect.TypeOf(txs))
+		fmt.Print(txs)
+		for {
+			select {
+			case txs := <-txs:
+				// To keep the original behaviour, send a single tx hash in one notification.
+				// TODO(rjl493456442) Send a batch of tx hashes in one notification
+				for _, tx := range txs {
+					notifier.Notify(rpcSub.ID, tx)
+					
+				}
+			case <-rpcSub.Err():
+				pendingTxSub.Unsubscribe()
+				return
+			case <-notifier.Closed():
+				pendingTxSub.Unsubscribe()
+				return
+			}
+		}
+	}()
+
+	return rpcSub, nil
+}
+
 // NewBlockFilter creates a filter that fetches blocks that are imported into the chain.
 // It is part of the filter package since polling goes with eth_getFilterChanges.
-func (api *FilterAPI) NewBlockFilter() rpc.ID {
+//
+// https://eth.wiki/json-rpc/API#eth_newblockfilter
+func (api *PublicFilterAPI) NewBlockFilter() rpc.ID {
 	var (
 		headers   = make(chan *types.Header)
 		headerSub = api.events.SubscribeNewHeads(headers)
@@ -207,7 +254,7 @@ func (api *FilterAPI) NewBlockFilter() rpc.ID {
 }
 
 // NewHeads send a notification each time a new (header) block is appended to the chain.
-func (api *FilterAPI) NewHeads(ctx context.Context) (*rpc.Subscription, error) {
+func (api *PublicFilterAPI) NewHeads(ctx context.Context) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
 		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
@@ -237,7 +284,7 @@ func (api *FilterAPI) NewHeads(ctx context.Context) (*rpc.Subscription, error) {
 }
 
 // Logs creates a subscription that fires for all new log that match the given filter criteria.
-func (api *FilterAPI) Logs(ctx context.Context, crit FilterCriteria) (*rpc.Subscription, error) {
+func (api *PublicFilterAPI) Logs(ctx context.Context, crit FilterCriteria) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
 		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
@@ -259,7 +306,6 @@ func (api *FilterAPI) Logs(ctx context.Context, crit FilterCriteria) (*rpc.Subsc
 			select {
 			case logs := <-matchedLogs:
 				for _, log := range logs {
-					log := log
 					notifier.Notify(rpcSub.ID, &log)
 				}
 			case <-rpcSub.Err(): // client send an unsubscribe request
@@ -290,7 +336,9 @@ type FilterCriteria ethereum.FilterQuery
 // again but with the removed property set to true.
 //
 // In case "fromBlock" > "toBlock" an error is returned.
-func (api *FilterAPI) NewFilter(crit FilterCriteria) (rpc.ID, error) {
+//
+// https://eth.wiki/json-rpc/API#eth_newfilter
+func (api *PublicFilterAPI) NewFilter(crit FilterCriteria) (rpc.ID, error) {
 	logs := make(chan []*types.Log)
 	logsSub, err := api.events.SubscribeLogs(ethereum.FilterQuery(crit), logs)
 	if err != nil {
@@ -323,11 +371,25 @@ func (api *FilterAPI) NewFilter(crit FilterCriteria) (rpc.ID, error) {
 }
 
 // GetLogs returns logs matching the given argument that are stored within the state.
-func (api *FilterAPI) GetLogs(ctx context.Context, crit FilterCriteria) ([]*types.Log, error) {
+//
+// https://eth.wiki/json-rpc/API#eth_getlogs
+func (api *PublicFilterAPI) GetLogs(ctx context.Context, crit FilterCriteria) ([]*types.Log, error) {
+	if api.chainConfig == nil {
+		return nil, errors.New("No chain config found. Proper PublicFilterAPI initialization required")
+	}
+
+	// get sprint from bor config
+	sprint := api.chainConfig.Bor.Sprint
+
 	var filter *Filter
+	var borLogsFilter *BorBlockLogsFilter
 	if crit.BlockHash != nil {
 		// Block filter requested, construct a single-shot filter
 		filter = NewBlockFilter(api.backend, *crit.BlockHash, crit.Addresses, crit.Topics)
+		// Block bor filter
+		if api.borLogs {
+			borLogsFilter = NewBorBlockLogsFilter(api.backend, sprint, *crit.BlockHash, crit.Addresses, crit.Topics)
+		}
 	} else {
 		// Convert the RPC block numbers into internal representations
 		begin := rpc.LatestBlockNumber.Int64()
@@ -340,17 +402,36 @@ func (api *FilterAPI) GetLogs(ctx context.Context, crit FilterCriteria) ([]*type
 		}
 		// Construct the range filter
 		filter = NewRangeFilter(api.backend, begin, end, crit.Addresses, crit.Topics)
+		// Block bor filter
+		if api.borLogs {
+			borLogsFilter = NewBorBlockLogsRangeFilter(api.backend, sprint, begin, end, crit.Addresses, crit.Topics)
+		}
 	}
+
 	// Run the filter and return all the logs
 	logs, err := filter.Logs(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	if borLogsFilter != nil {
+		// Run the filter and return all the logs
+		borBlockLogs, err := borLogsFilter.Logs(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		return returnLogs(types.MergeBorLogs(logs, borBlockLogs)), err
+	}
+
+	// merge bor block logs and receipt logs and return it
 	return returnLogs(logs), err
 }
 
 // UninstallFilter removes the filter with the given filter id.
-func (api *FilterAPI) UninstallFilter(id rpc.ID) bool {
+//
+// https://eth.wiki/json-rpc/API#eth_uninstallfilter
+func (api *PublicFilterAPI) UninstallFilter(id rpc.ID) bool {
 	api.filtersMu.Lock()
 	f, found := api.filters[id]
 	if found {
@@ -366,7 +447,9 @@ func (api *FilterAPI) UninstallFilter(id rpc.ID) bool {
 
 // GetFilterLogs returns the logs for the filter with the given id.
 // If the filter could not be found an empty array of logs is returned.
-func (api *FilterAPI) GetFilterLogs(ctx context.Context, id rpc.ID) ([]*types.Log, error) {
+//
+// https://eth.wiki/json-rpc/API#eth_getfilterlogs
+func (api *PublicFilterAPI) GetFilterLogs(ctx context.Context, id rpc.ID) ([]*types.Log, error) {
 	api.filtersMu.Lock()
 	f, found := api.filters[id]
 	api.filtersMu.Unlock()
@@ -405,7 +488,9 @@ func (api *FilterAPI) GetFilterLogs(ctx context.Context, id rpc.ID) ([]*types.Lo
 //
 // For pending transaction and block filters the result is []common.Hash.
 // (pending)Log filters return []Log.
-func (api *FilterAPI) GetFilterChanges(id rpc.ID) (interface{}, error) {
+//
+// https://eth.wiki/json-rpc/API#eth_getfilterchanges
+func (api *PublicFilterAPI) GetFilterChanges(id rpc.ID) (interface{}, error) {
 	api.filtersMu.Lock()
 	defer api.filtersMu.Unlock()
 
@@ -418,14 +503,10 @@ func (api *FilterAPI) GetFilterChanges(id rpc.ID) (interface{}, error) {
 		f.deadline.Reset(api.timeout)
 
 		switch f.typ {
-		case BlocksSubscription:
+		case PendingTransactionsSubscription, BlocksSubscription:
 			hashes := f.hashes
 			f.hashes = nil
 			return returnHashes(hashes), nil
-		case PendingTransactionsSubscription:
-			txs := f.txs
-			f.txs = nil
-			return txs, nil
 		case LogsSubscription, MinedAndPendingLogsSubscription:
 			logs := f.logs
 			f.logs = nil
