@@ -41,7 +41,7 @@ type filter struct {
 	typ      Type
 	deadline *time.Timer // filter is inactiv when deadline triggers
 	hashes   []common.Hash
-	txs []*types.Transaction
+	txs      []*types.Transaction
 	crit     FilterCriteria
 	logs     []*types.Log
 	s        *Subscription // associated subscription in event system
@@ -191,6 +191,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsCompile(ctx context.Context) (
 		txs := make(chan []*types.Transaction, 128)
 		pendingTxSub := api.events.SubscribePendingTxsCompile(txs)
 		fmt.Printf("GetTransactionByHash: %s\n", reflect.TypeOf(txs))
+		fmt.Print(txs)
 		for {
 			select {
 			case txs := <-txs:
