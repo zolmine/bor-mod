@@ -178,7 +178,7 @@ func (api *PublicFilterAPI) NewPendingTransactionFilter() rpc.ID {
 // 	return rpcSub, nil
 // }
 
-func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
+func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
 		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
@@ -196,11 +196,9 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context, fullTx *
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
-					if fullTx != nil && *fullTx {
-						notifier.Notify(rpcSub.ID, tx)
-					} else {
-						notifier.Notify(rpcSub.ID, tx.Hash())
-					}
+					
+					notifier.Notify(rpcSub.ID, tx)
+					
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
