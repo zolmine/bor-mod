@@ -204,7 +204,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsCompile(ctx context.Context, f
 					// 	from, _ := types.Sender(types.HomesteadSigner{}, tx) 
 					// 	fmt.Print(from)					
 					// }
-					if tx.Type() == "0x0"{
+					if tx.Type() == "0x0" {
 						result := map[string]interface{}{
 							"type": tx.Type(),
 							"nonce": tx.Nonce(),
@@ -216,8 +216,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsCompile(ctx context.Context, f
 							"to": tx.To(),
 							"hash": tx.Hash(),
 						}
-					}
-					else{
+					} else {
 
 						result := map[string]interface{}{
 							"type": tx.Type(),
