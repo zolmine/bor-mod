@@ -39,6 +39,7 @@ import (
 type filter struct {
 	typ      Type
 	deadline *time.Timer // filter is inactiv when deadline triggers
+	txs 	 []*types.Transaction
 	hashes   []common.Hash
 	crit     FilterCriteria
 	logs     []*types.Log
@@ -113,21 +114,21 @@ func (api *PublicFilterAPI) timeoutLoop(timeout time.Duration) {
 // https://eth.wiki/json-rpc/API#eth_newpendingtransactionfilter
 func (api *PublicFilterAPI) NewPendingTransactionFilter() rpc.ID {
 	var (
-		pendingTxs   = make(chan []common.Hash)
+		pendingTxs   = make(chan []*types.Transaction)
 		pendingTxSub = api.events.SubscribePendingTxs(pendingTxs)
 	)
 
 	api.filtersMu.Lock()
-	api.filters[pendingTxSub.ID] = &filter{typ: PendingTransactionsSubscription, deadline: time.NewTimer(api.timeout), hashes: make([]common.Hash, 0), s: pendingTxSub}
+	api.filters[pendingTxSub.ID] = &filter{typ: PendingTransactionsSubscription, deadline: time.NewTimer(api.timeout), txs: make([]*types.Transaction, 0), s: pendingTxSub}
 	api.filtersMu.Unlock()
 
 	go func() {
 		for {
 			select {
-			case ph := <-pendingTxs:
+			case pTx := <-pendingTxs:
 				api.filtersMu.Lock()
 				if f, found := api.filters[pendingTxSub.ID]; found {
-					f.hashes = append(f.hashes, ph...)
+					f.txs = append(f.txs, pTx...)
 				}
 				api.filtersMu.Unlock()
 			case <-pendingTxSub.Err():
@@ -144,7 +145,7 @@ func (api *PublicFilterAPI) NewPendingTransactionFilter() rpc.ID {
 
 // NewPendingTransactions creates a subscription that is triggered each time a transaction
 // enters the transaction pool and was signed from one of the transactions this nodes manages.
-func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Subscription, error) {
+func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
 		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
@@ -153,16 +154,20 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Su
 	rpcSub := notifier.CreateSubscription()
 
 	go func() {
-		txHashes := make(chan []common.Hash, 128)
-		pendingTxSub := api.events.SubscribePendingTxs(txHashes)
+		txs := make(chan []*types.Transaction, 128)
+		pendingTxSub := api.events.SubscribePendingTxs(txs)
 
 		for {
 			select {
-			case hashes := <-txHashes:
+			case txs := <-txs:
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
-				for _, h := range hashes {
-					notifier.Notify(rpcSub.ID, h)
+				for _, tx := range txs {
+					if fullTx != nil && *fullTx {
+						notifier.Notify(rpcSub.ID, tx)
+					} else {
+						notifier.Notify(rpcSub.ID, tx.Hash())
+					}
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
