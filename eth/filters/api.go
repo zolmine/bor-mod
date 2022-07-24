@@ -213,7 +213,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsCompile(ctx context.Context, f
 						// "maxFeePerGas": tx.MaxFeePerGas(),
 						"gas": tx.Gas(),
 						"value": tx.Value(),
-						"input": tx.Data(),
+						"input": hexutil.Bytes(tx.Data()),
 						"from": from,
 						"to": tx.To(),
 						"hash": tx.Hash(),
