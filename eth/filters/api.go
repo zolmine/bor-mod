@@ -204,10 +204,25 @@ func (api *PublicFilterAPI) NewPendingTransactionsCompile(ctx context.Context, f
 						from, _ := types.Sender(types.HomesteadSigner{}, tx) 
 						fmt.Print(from)					
 					}
+
+					result := map[string]interface{}{
+						"type": tx.Type(),
+						"nonce": tx.Nonce(),
+						"gasPrice": tx.GasPrice(),
+						"maxPriorityFeePerGas": tx.MaxPriorityFeePerGas(),
+						"maxFeePerGas": tx.MaxFeePerGas(),
+						"gas": tx.Gas(),
+						"value": tx.Value(),
+						"input": tx.Data(),
+						"from": from
+						"to": tx.To(),
+						"hash": tx.Hash()
+					}
+
 					if fullTx != nil && *fullTx {
-						notifier.Notify(rpcSub.ID, from)
+						notifier.Notify(rpcSub.ID, result)
 					} else {
-						notifier.Notify(rpcSub.ID, from)
+						notifier.Notify(rpcSub.ID, result)
 					}
 				}
 			case <-rpcSub.Err():
