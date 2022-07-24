@@ -166,7 +166,7 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context, fullTx *
 					if fullTx != nil && *fullTx {
 						notifier.Notify(rpcSub.ID, tx)
 					} else {
-						notifier.Notify(rpcSub.ID, tx)
+						notifier.Notify(rpcSub.ID, tx.Hash())
 					}
 				}
 			case <-rpcSub.Err():
