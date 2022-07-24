@@ -202,8 +202,8 @@ func (api *PublicFilterAPI) NewPendingTransactionsCompile(ctx context.Context, f
 					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
 					if err != nil {
 						from, _ := types.Sender(types.HomesteadSigner{}, tx) 
+						fmt.Print(from)					
 					}
-					fmt.Print(from)					
 					if fullTx != nil && *fullTx {
 						notifier.Notify(rpcSub.ID, from)
 					} else {
