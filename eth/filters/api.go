@@ -216,7 +216,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsCompile(ctx context.Context, f
 						"input": tx.Data(),
 						"from": from,
 						"to": tx.To(),
-						"hash": tx.Hash()
+						"hash": tx.Hash(),
 					}
 
 					if fullTx != nil && *fullTx {
