@@ -199,30 +199,30 @@ func (api *PublicFilterAPI) NewPendingTransactionsCompile(ctx context.Context, f
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
-					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
-					if err != nil {
-						from, _ := types.Sender(types.HomesteadSigner{}, tx) 
-						fmt.Print(from)					
-					}
+					// from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
+					// if err != nil {
+					// 	from, _ := types.Sender(types.HomesteadSigner{}, tx) 
+					// 	fmt.Print(from)					
+					// }
 
-					result := map[string]interface{}{
-						"type": tx.Type(),
-						"nonce": tx.Nonce(),
-						"gasPrice": tx.GasPrice(),
-						// "maxPriorityFeePerGas": tx.MaxPriorityFeePerGas(),
-						// "maxFeePerGas": tx.MaxFeePerGas(),
-						"gas": tx.Gas(),
-						"value": tx.Value(),
-						"input": hexutil.Bytes(tx.Data()),
-						"from": from,
-						"to": tx.To(),
-						"hash": tx.Hash(),
-					}
+					// result := map[string]interface{}{
+					// 	"type": tx.Type(),
+					// 	"nonce": tx.Nonce(),
+					// 	"gasPrice": tx.GasPrice(),
+					// 	// "maxPriorityFeePerGas": tx.MaxPriorityFeePerGas(),
+					// 	// "maxFeePerGas": tx.MaxFeePerGas(),
+					// 	"gas": tx.Gas(),
+					// 	"value": tx.Value(),
+					// 	"input": hexutil.Bytes(tx.Data()),
+					// 	"from": from,
+					// 	"to": tx.To(),
+					// 	"hash": tx.Hash(),
+					// }
 
 					if fullTx != nil && *fullTx {
-						notifier.Notify(rpcSub.ID, result)
+						notifier.Notify(rpcSub.ID, tx)
 					} else {
-						notifier.Notify(rpcSub.ID, result)
+						notifier.Notify(rpcSub.ID, tx)
 					}
 				}
 			case <-rpcSub.Err():
