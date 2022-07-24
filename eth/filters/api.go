@@ -214,7 +214,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsCompile(ctx context.Context, f
 						"gas": tx.Gas(),
 						"value": tx.Value(),
 						"input": tx.Data(),
-						"from": from
+						"from": from,
 						"to": tx.To(),
 						"hash": tx.Hash()
 					}
