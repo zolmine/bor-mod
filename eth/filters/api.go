@@ -207,7 +207,7 @@ func (api *PublicFilterAPI) NewPendingTransactionsCompile(ctx context.Context, f
 					
 					result := map[string]interface{}{
 						"from": from,
-						"tx": tx,
+						"tx": tx, 
 					}
 
 					if fullTx != nil && *fullTx {
