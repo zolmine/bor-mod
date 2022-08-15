@@ -49,6 +49,7 @@ type AccessListTx struct {
 	GasPrice   *big.Int        // wei per gas
 	Gas        uint64          // gas limit
 	To         *common.Address `rlp:"nil"` // nil means contract creation
+	Time	   *big.Int
 	Value      *big.Int        // wei amount
 	Data       []byte          // contract invocation input data
 	AccessList AccessList      // EIP-2930 access list
