@@ -83,7 +83,7 @@ type TxData interface {
 	nonce() uint64
 	to() *common.Address
 
-	Time() *big.Int
+	time() *big.Int
 	rawSignatureValues() (v, r, s *big.Int)
 	setSignatureValues(chainID, v, r, s *big.Int)
 }
