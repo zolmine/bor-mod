@@ -83,6 +83,7 @@ type TxData interface {
 	nonce() uint64
 	to() *common.Address
 
+	Time() *big.Int
 	rawSignatureValues() (v, r, s *big.Int)
 	setSignatureValues(chainID, v, r, s *big.Int)
 }
@@ -266,6 +267,8 @@ func (tx *Transaction) Gas() uint64 { return tx.inner.gas() }
 
 // GasPrice returns the gas price of the transaction.
 func (tx *Transaction) GasPrice() *big.Int { return new(big.Int).Set(tx.inner.gasPrice()) }
+
+func (tx *Transaction) Time() *big.Int { return new(big.Int).Set(tx.time) }
 
 // GasTipCap returns the gasTipCap per gas of the transaction.
 func (tx *Transaction) GasTipCap() *big.Int { return new(big.Int).Set(tx.inner.gasTipCap()) }
