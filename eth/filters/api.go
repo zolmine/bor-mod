@@ -212,7 +212,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 					result := map[string]interface{}{
 						"from": from,
 						"tx": tx,
-						"time": time.Now(),
+						"time": int64(time.Millisecond),
 					}
 
 					if fullTx != nil && *fullTx {
