@@ -193,12 +193,12 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 		txs := make(chan []*types.Transaction, 128)
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 
+		fmt.Print(txs)
 		for {
 			select {
 			case txs := <-txs:
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
-				fmt.Print(txs)
 				for _, tx := range txs {
 					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
 					if err != nil {
