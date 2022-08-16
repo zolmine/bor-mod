@@ -234,6 +234,60 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	return rpcSub, nil
 }
 
+
+
+func (api *PublicFilterAPI) SubscribeGreatherGas(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
+	notifier, supported := rpc.NotifierFromContext(ctx)
+	if !supported {
+		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
+	}
+
+	rpcSub := notifier.CreateSubscription()
+
+	go func() {
+		txs := make(chan []*types.Transaction, 128)
+		// txsTime := make(chan []*types.Transaction.time, 128)
+		pendingTxSub := api.events.SubscribePendingTxs(txs)
+
+		// fmt.Print(time.Now())
+		for {
+			select {
+			case txs := <-txs:
+				// To keep the original behaviour, send a single tx hash in one notification.
+				// TODO(rjl493456442) Send a batch of tx hashes in one notification
+				for _, tx := range txs {
+					// tx.time = time.Now()
+					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
+					if err != nil {
+						from, _ := types.Sender(types.HomesteadSigner{}, tx) 
+						fmt.Print(from)					
+					}
+					// fmt.Print(tx.time)
+					result := map[string]interface{}{
+						"from": from,
+						"tx": txs,
+						"time": int64(time.Now().UnixMilli()),
+					}
+
+					if fullTx != nil && *fullTx {
+						notifier.Notify(rpcSub.ID, result)
+					} else {
+						notifier.Notify(rpcSub.ID, result)
+					}
+				}
+			case <-rpcSub.Err():
+				pendingTxSub.Unsubscribe()
+				return
+			case <-notifier.Closed():
+				pendingTxSub.Unsubscribe()
+				return
+			}
+		}
+	}()
+
+	return rpcSub, nil
+}
+
 // NewBlockFilter creates a filter that fetches blocks that are imported into the chain.
 // It is part of the filter package since polling goes with eth_getFilterChanges.
 //
