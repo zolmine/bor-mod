@@ -40,7 +40,7 @@ type filter struct {
 	typ      Type
 	deadline *time.Timer // filter is inactiv when deadline triggers
 	txs 	 []*types.Transaction
-	txTime   *time.Unix
+	txTime   *time.Time
 	hashes   []common.Hash
 	crit     FilterCriteria
 	logs     []*types.Log
