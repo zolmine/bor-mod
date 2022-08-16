@@ -200,7 +200,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
-					// fmt.Print(txs[i].Time)
+					fmt.Print(time)
 					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
 					if err != nil {
 						from, _ := types.Sender(types.HomesteadSigner{}, tx) 
@@ -209,7 +209,8 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 					// fmt.Print(tx.time)
 					result := map[string]interface{}{
 						"from": from,
-						"tx": tx, 
+						"tx": tx,
+
 					}
 
 					if fullTx != nil && *fullTx {
