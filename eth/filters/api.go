@@ -199,7 +199,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 			case txs := <-txs:
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
-				for i, tx := range txs {
+				for _, tx := range txs {
 					// fmt.Print(txs[i].Time)
 					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
 					if err != nil {
