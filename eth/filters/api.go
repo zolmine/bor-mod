@@ -195,14 +195,14 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 		// txsTime := make(chan []*types.Transaction.time, 128)
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 
-		fmt.Print(time.Now())
+		// fmt.Print(time.Now())
 		for {
 			select {
 			case txs := <-txs:
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
-					// tx.time = time.Now()
+					tx["time"] = time.Now()
 					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
 					if err != nil {
 						from, _ := types.Sender(types.HomesteadSigner{}, tx) 
