@@ -191,9 +191,10 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
+		txsTime := make(chan []*types.Transaction.time, 128)
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 
-		fmt.Print(txs)
+		fmt.Print(txsTime)
 		for {
 			select {
 			case txs := <-txs:
