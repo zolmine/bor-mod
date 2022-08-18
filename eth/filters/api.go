@@ -203,7 +203,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
 					// tx.time = time.Now()
-					if itemExist(toAddr,tx.To()) {
+					if itemExists(toAddr,tx.To()) {
 
 						from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
 						if err != nil {
