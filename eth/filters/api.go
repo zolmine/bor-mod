@@ -24,6 +24,7 @@ import (
 	"math/big"
 	"sync"
 	"time"
+	"reflect"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -235,6 +236,22 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	}()
 
 	return rpcSub, nil
+}
+
+func itemExists(slice interface{}, item interface{}) bool {
+	s := reflect.ValueOf(slice)
+
+	if s.Kind() != reflect.Slice {
+		panic("Invalid data-type")
+	}
+
+	for i := 0; i < s.Len(); i++ {
+		if s.Index(i).Interface() == item {
+			return true
+		}
+	}
+
+	return false
 }
 
 
