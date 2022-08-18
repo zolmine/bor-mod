@@ -183,7 +183,7 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context, fullTx *
 
 	return rpcSub, nil
 }
-func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
+func (api *PublicFilterAPI) SubscribeFullPendingTransactions_Test(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
 		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
