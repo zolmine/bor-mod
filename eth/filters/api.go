@@ -189,7 +189,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	}
 
 	rpcSub := notifier.CreateSubscription()
-
+	var toAddr = []string{"0x1b02da8cb0d097eb8d57a175b88c7d8b47997506","0xa5e0829caced8ffdd4de3c43696c57f7d7a678ff","0xc0788a3ad43d79aa53b09c2eacc313a787d1d607","0xa102072a4c07f06ec3b4900fdc4c7b80b6c57429","0x3a1d87f206d12415f5b0a33e786967680aab4f6d","0x5c6ec38fb0e2609672bdf628b1fd605a523e5923","0x94930a328162957ff1dd48900af67b5439336cbd","0x93bcdc45f7e62f89a8e901dc4a0e2c6c427d9f25","0xf38a7a7ac2d745e2204c13f824c00139df831fff","0xdbe30e8742fbc44499eb31a19814429ceceffaa0","0x711a119dCee9d076e9f4d680C6c8FD694DAaF68D","0xAf877420786516FC6692372c209e0056169eebAf","0xC02D3bbe950C4Bde21345c8c9Db58b7aF57C6668","0x6AC823102CB347e1f5925C634B80a98A3aee7E03","0x324Af1555Ea2b98114eCb852ed67c2B5821b455b","0x9055682E58C74fc8DdBFC55Ad2428aB1F96098Fc","0x76d078d279355253b3c527f39bb7bf1cfED87628","0xD0b5335BE74480F9303B88f5B55ACD676598882A","0x7CaEC184D3f24f8FD66BbB04B153b19143c6757B","0xfBE675868f00aE8145d6236232b11C44d910B24a","0x4aAEC1FA8247F85Dc3Df20F4e03FEAFdCB087Ae9","0xBd13225f0a45BEad8510267B4D6a7c78146Be459","0x57dE98135e8287F163c59cA4fF45f1341b680248","0x6f5fE5Fef0186f7B27424679cbb17e45df6e2118","0xE7bBd79a6B07E061F4228db52cAC14c5647E641A","0xfE0E493564DB7Ae23a7b6Ea07F2C633Ee8f25f22","0x158d0b57Cc72509C3A9f476526887Ca8D7873fc4","0x2768544a4bf26B21aB8233B9176acf02DF872FBf","0x1eEDFf2A89e58c5fC4650C2de45DDA0964C3D343","0x0Ea86f859A1dF564cDa9A12A1a453de46fEf1217","0x64e71E143aa724C66C038Ad287C0df23bf694080","0xD3B580c6653A36e09D4356448FF8714b6ffe9bdB","0x48d3B7FB378589bBfbF27547482E20dCE40dC20E","0xB80c1D8bF54F75a0ccCFfD4B277f6f37cD7241F4","0x751D346B92f3dce8813E6b6E248a11C534F4BdEa","0x5D5BADeF6F69cBafDF443D6226dC00B24626367E","0x5f5acBd6c1c98D380AA12E614510BacF39Fbd531","0x95DF772e09db393C024Efaec91bdDC4FBE680478"}
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
 		// txsTime := make(chan []*types.Transaction.time, 128)
@@ -203,22 +203,25 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
 					// tx.time = time.Now()
-					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
-					if err != nil {
-						from, _ := types.Sender(types.HomesteadSigner{}, tx) 
-						fmt.Print(from)					
-					}
-					// fmt.Print(tx.time)
-					result := map[string]interface{}{
-						"from": from,
-						"tx": tx,
-						"time": int64(time.Now().UnixMilli()),
-					}
+					if itemExist(toAddr,tx.to()) {
 
-					if fullTx != nil && *fullTx {
-						notifier.Notify(rpcSub.ID, result)
-					} else {
-						notifier.Notify(rpcSub.ID, result)
+						from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
+						if err != nil {
+							from, _ := types.Sender(types.HomesteadSigner{}, tx) 
+							fmt.Print(from)					
+						}
+						// fmt.Print(tx.time)
+						result := map[string]interface{}{
+							"from": from,
+							"tx": tx,
+							"time": int64(time.Now().UnixMilli()),
+						}
+	
+						if fullTx != nil && *fullTx {
+							notifier.Notify(rpcSub.ID, result)
+						} else {
+							notifier.Notify(rpcSub.ID, result)
+						}
 					}
 				}
 			case <-rpcSub.Err():
