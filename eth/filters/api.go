@@ -206,7 +206,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 					// fmt.Printf("to compared address is: %T\n", toAddr[0])
 					// fmt.Printf("t4: %T\n", t4)
 					// tx.time = time.Now()
-					if toAddr[0] == string(tx.To()) || toAddr[1] == string(tx.To()) {
+					if *types.HexToAddress(toAddr[0]) == tx.To() || *types.HexToAddress(toAddr[1]) == tx.To() {
 
 						from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
 						if err != nil {
