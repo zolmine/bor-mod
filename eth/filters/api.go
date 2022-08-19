@@ -190,7 +190,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	}
 
 	rpcSub := notifier.CreateSubscription()
-	toAddr := []*common.Address{"0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506","0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"}
+	toAddr = []common.Address{common.HexToAddress("0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506"),common.HexToAddress("0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff")}
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
 		// txsTime := make(chan []*types.Transaction.time, 128)
