@@ -24,7 +24,7 @@ import (
 	"math/big"
 	"sync"
 	"time"
-	// "reflect"
+	"reflect"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -190,7 +190,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	}
 
 	rpcSub := notifier.CreateSubscription()
-	toAddr := []string{"0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506","0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"}
+	var toAddr = []string{"0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506","0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"}
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
 		// txsTime := make(chan []*types.Transaction.time, 128)
@@ -202,11 +202,9 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
-					// fmt.Printf("to address is: %T\n", tx.To())
-					// fmt.Printf("to compared address is: %T\n", toAddr[0])
-					// fmt.Printf("t4: %T\n", t4)
+					fmt.Print("to address is: ", tx.To(), "\n")
 					// tx.time = time.Now()
-					if *common.HexToAddress(toAddr[0]) == tx.To() || *common.HexToAddress(toAddr[1]) == tx.To() {
+					if itemExists(toAddr,tx.To()) {
 
 						from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
 						if err != nil {
@@ -240,21 +238,23 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	return rpcSub, nil
 }
 
-// func itemExists(slice interface{}, item interface{}) bool {
-// 	s := reflect.ValueOf(slice)
+func itemExists(slice interface{}, item interface{}) bool {
+	s := reflect.ValueOf(slice)
 
-// 	if s.Kind() != reflect.Slice {
-// 		panic("Invalid data-type")
-// 	}
+	if s.Kind() != reflect.Slice {
+		panic("Invalid data-type")
+		mt.Print("Invalid data-type","\n")
+	}
+	
+	for i := 0; i < s.Len(); i++ {
+		if s.Index(i).Interface() == item {
+			mt.Print("True","\n")
+			return true
+		}
+	}
 
-// 	for i := 0; i < s.Len(); i++ {
-// 		if s.Index(i).Interface() == item {
-// 			return true
-// 		}
-// 	}
-
-// 	return false
-// }
+	return false
+}
 
 
 
