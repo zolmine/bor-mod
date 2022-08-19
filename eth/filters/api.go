@@ -190,7 +190,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	}
 
 	rpcSub := notifier.CreateSubscription()
-	toAddr := []*common.Address{"0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506","0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"}
+	toAddr := []string{"0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506","0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"}
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
 		// txsTime := make(chan []*types.Transaction.time, 128)
@@ -206,7 +206,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 					// fmt.Printf("to compared address is: %T\n", toAddr[0])
 					// fmt.Printf("t4: %T\n", t4)
 					// tx.time = time.Now()
-					if toAddr[0] == tx.To() || toAddr[1] == tx.To() {
+					if toAddr[0] == string(tx.To()) || toAddr[1] == string(tx.To()) {
 
 						from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
 						if err != nil {
