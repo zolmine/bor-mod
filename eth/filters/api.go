@@ -204,7 +204,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				for _, tx := range txs {
 					fmt.Print("to address is: ", tx.To())
 					// tx.time = time.Now()
-					if itemExists(toAddr,tx.To()) {
+					if toAddr[0] == tx.To() || toAddr[1] == tx.To() {
 
 						from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
 						if err != nil {
