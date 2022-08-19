@@ -24,7 +24,7 @@ import (
 	"math/big"
 	"sync"
 	"time"
-	"reflect"
+	// "reflect"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -202,9 +202,11 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
-					fmt.Print("to address is: ", tx.To())
+					fmt.Printf("to address is: %T\n", tx.To())
+					fmt.Printf("to compared address is: %T\n", toAddr[0])
+					// fmt.Printf("t4: %T\n", t4)
 					// tx.time = time.Now()
-					if toAddr[0] == tx.To() || toAddr[1] == tx.To() {
+					// if toAddr[0] == tx.To() || toAddr[1] == tx.To() {
 
 						from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
 						if err != nil {
@@ -223,7 +225,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 						} else {
 							notifier.Notify(rpcSub.ID, result)
 						}
-					}
+					// }
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
