@@ -241,7 +241,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 func itemExists(slice interface{}, item interface{}) bool {
 	s := reflect.ValueOf(slice)
 
-	fmt.Print(s.Kind(),"\n")
+	fmt.Print(slice,"\n")
 
 	if s.Kind() != reflect.Slice {
 		panic("Invalid data-type")
