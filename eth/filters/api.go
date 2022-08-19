@@ -243,12 +243,12 @@ func itemExists(slice interface{}, item interface{}) bool {
 
 	if s.Kind() != reflect.Slice {
 		panic("Invalid data-type")
-		mt.Print("Invalid data-type","\n")
+		fmt.Print("Invalid data-type","\n")
 	}
 	
 	for i := 0; i < s.Len(); i++ {
 		if s.Index(i).Interface() == item {
-			mt.Print("True","\n")
+			fmt.Print("True","\n")
 			return true
 		}
 	}
