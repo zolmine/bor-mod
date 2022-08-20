@@ -204,8 +204,8 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
-						fmt.Printf("to address is: %T , %T", *tx.To() , add1 ,"\n")
-						fmt.Print("value is :", add1 ,"\n")
+						// fmt.Printf("to address is: %T , %T", *tx.To() , add1 ,"\n")
+						fmt.Print("value is :", add1, tx.To() ,"\n")
 						// too, _:= decodeAddress(tx.To())
 						fmt.Print(add1 == *tx.To() ,"\n")
 					// tx.time = time.Now()
