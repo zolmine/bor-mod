@@ -207,7 +207,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 						fmt.Printf("to address is: %T , %T", *tx.To() , add1 ,"\n")
 						fmt.Print("value is :", add1 ,"\n")
 						// too, _:= decodeAddress(tx.To())
-						// fmt.Print(add1 == too ,"\n")
+						fmt.Print(add1 == *tx.To() ,"\n")
 					// tx.time = time.Now()
 					// if itemExists(toAddr,tx.To()) {
 
