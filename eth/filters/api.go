@@ -254,7 +254,7 @@ func itemExists(slice common.Address{}, item common.Address{}) bool {
 	// 	fmt.Print("Invalid data-type\n")
 	// }
 	
-	for _, to {
+	for _, to := range slice {
 		// fmt.Print("  \n")
 		if to == item {
 			// fmt.Print("True\n")
