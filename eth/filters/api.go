@@ -190,7 +190,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	}
 
 	rpcSub := notifier.CreateSubscription()
-	add1, _ := &decodeAddress("0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506")
+	add1, _ := decodeAddress("0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506")
 	// add2, _ := decodeAddress("0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506")
 	// var toAddr = []string{"0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff","0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"}
 	go func() {
