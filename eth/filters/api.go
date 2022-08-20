@@ -242,27 +242,6 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	return rpcSub, nil
 }
 
-func itemExists(slice interface{}, item interface{}) bool {
-	s := reflect.ValueOf(slice)
-
-	fmt.Printf(slice, (item),"\n")
-	// fmt.Printf(slice, (item),"\n")
-	
-	if s.Kind() != reflect.Slice {
-		panic("Invalid data-type")
-		fmt.Print("Invalid data-type\n")
-	}
-	
-	for i := 0; i < s.Len(); i++ {
-		fmt.Print(" im in \n")
-		if s.Index(i).Interface() == item {
-			fmt.Print("True\n")
-			return true
-		}
-	}
-
-	return false
-}
 
 
 
