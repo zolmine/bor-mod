@@ -229,7 +229,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 						} else {
 							notifier.Notify(rpcSub.ID, result)
 						}
-					// }
+					}
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
