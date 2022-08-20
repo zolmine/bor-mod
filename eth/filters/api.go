@@ -244,7 +244,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	return rpcSub, nil
 }
 
-func itemExists(slice common.Address{}, item common.Address{}) bool {
+func itemExists(slice common.Address, item common.Address) bool {
 	// s := reflect.ValueOf(slice)
 
 	// fmt.Printf(slice, (item),"\n")
