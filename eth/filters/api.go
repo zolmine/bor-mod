@@ -190,7 +190,9 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	}
 
 	rpcSub := notifier.CreateSubscription()
-	var toAddr = []string{"0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506","0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"}
+	add1, _ := decodeAddress("0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506")
+	add2, _ := decodeAddress("0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506")
+	var toAddr = []string{"0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff","0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"}
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
 		// txsTime := make(chan []*types.Transaction.time, 128)
@@ -202,9 +204,9 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
-					fmt.Print("to address is: ", tx.To(), "\n")
+						fmt.Printf("to address is: %T , %T", tx.To() , add1 "\n")
 					// tx.time = time.Now()
-					if itemExists(toAddr,tx.To()) {
+					// if itemExists(toAddr,tx.To()) {
 
 						from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
 						if err != nil {
@@ -223,7 +225,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 						} else {
 							notifier.Notify(rpcSub.ID, result)
 						}
-					}
+					// }
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
