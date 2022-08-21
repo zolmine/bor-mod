@@ -204,9 +204,8 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
 					fmt.Print(tx.To(), "\n")
-					toAd := &tx.To()
-					if err != nil {
-
+					Try: func () {
+						toAd := *tx.To()
 						if add1 == toAd || add2 == toAd {
 	
 							from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
@@ -227,7 +226,11 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 								notifier.Notify(rpcSub.ID, result)
 							}
 						}
-					}	
+					},
+					Catch: func(e Exception) {
+						fmt.Printf("Caught %v\n", e)
+					},
+						
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
