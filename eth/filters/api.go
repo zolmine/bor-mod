@@ -205,7 +205,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				for _, tx := range txs {
 					fmt.Print(tx.To(), "\n")
 					
-					toAd := converter(tx.To())
+					toAd, err := converter(tx.To())
 					if add1 == toAd || add2 == toAd {
 
 						from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
