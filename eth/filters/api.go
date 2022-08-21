@@ -249,7 +249,7 @@ func converter(item *common.Address) (common.Address, error) {
 	if hello {
 		return data, nil
 	} else {
-		return *item,"notWorking"
+		return *item,errors.New("notWorking")
 	}
 }
 
