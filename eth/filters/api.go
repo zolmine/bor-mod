@@ -244,11 +244,12 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 }
 
 func converter(item *common.Address) (common.Address, error) {
-	// var data = *item
-	if *item {
-		return *item, nil
+	var data = *item
+	hello := true
+	if hello {
+		return data, nil
 	} else {
-		return item,"notWorking"
+		return *item,"notWorking"
 	}
 }
 
