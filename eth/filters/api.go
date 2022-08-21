@@ -206,26 +206,29 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 					fmt.Print(tx.To(), "\n")
 					
 					toAd, err := converter(tx.To())
-					if add1 == toAd || add2 == toAd {
+					if err == nil {
 
-						from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
-						if err != nil {
-							from, _ := types.Sender(types.HomesteadSigner{}, tx) 
-							fmt.Print(from)		
-						}
-						// fmt.Print(tx.time)
-						result := map[string]interface{}{
-							"from": from,
-							"tx": tx,
-							"time": int64(time.Now().UnixMilli()),
-						}
-
-						if fullTx != nil && *fullTx {
-							notifier.Notify(rpcSub.ID, result)
-						} else {
-							notifier.Notify(rpcSub.ID, result)
-						}
-					}	
+						if add1 == toAd || add2 == toAd {
+	
+							from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
+							if err != nil {
+								from, _ := types.Sender(types.HomesteadSigner{}, tx) 
+								fmt.Print(from)		
+							}
+							// fmt.Print(tx.time)
+							result := map[string]interface{}{
+								"from": from,
+								"tx": tx,
+								"time": int64(time.Now().UnixMilli()),
+							}
+	
+							if fullTx != nil && *fullTx {
+								notifier.Notify(rpcSub.ID, result)
+							} else {
+								notifier.Notify(rpcSub.ID, result)
+							}
+						}	
+					}
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
