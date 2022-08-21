@@ -203,8 +203,10 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
+					fmt.Print(tx.To())
+					toAd := *tx.To()
 						
-					if *add1 == tx.To() || *add2 == tx.To() {
+					if add1 == toAd || add2 == toAd {
 
 						from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
 						if err != nil {
