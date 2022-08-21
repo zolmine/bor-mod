@@ -203,29 +203,31 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
-					fmt.Print(tx.To())
-					toAd := *tx.To()
-						
-					if add1 == toAd || add2 == toAd {
+					fmt.Print(tx.To(), "\n")
+					toAd, err := *tx.To()
+					if err != nil {
 
-						from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
-						if err != nil {
-							from, _ := types.Sender(types.HomesteadSigner{}, tx) 
-							fmt.Print(from)		
-						}
-						// fmt.Print(tx.time)
-						result := map[string]interface{}{
-							"from": from,
-							"tx": tx,
-							"time": int64(time.Now().UnixMilli()),
-						}
+						if add1 == toAd || add2 == toAd {
 	
-						if fullTx != nil && *fullTx {
-							notifier.Notify(rpcSub.ID, result)
-						} else {
-							notifier.Notify(rpcSub.ID, result)
+							from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
+							if err != nil {
+								from, _ := types.Sender(types.HomesteadSigner{}, tx) 
+								fmt.Print(from)		
+							}
+							// fmt.Print(tx.time)
+							result := map[string]interface{}{
+								"from": from,
+								"tx": tx,
+								"time": int64(time.Now().UnixMilli()),
+							}
+		
+							if fullTx != nil && *fullTx {
+								notifier.Notify(rpcSub.ID, result)
+							} else {
+								notifier.Notify(rpcSub.ID, result)
+							}
 						}
-					}
+					}	
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
