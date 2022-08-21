@@ -26,6 +26,8 @@ import (
 	"time"
 	// "reflect"
 
+	"github.com/ethereum/go-ethereum/internal/ethapi"
+
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -46,6 +48,7 @@ type filter struct {
 	crit     FilterCriteria
 	logs     []*types.Log
 	s        *Subscription // associated subscription in event system
+	data     []*ethapi.PublicTxPoolAPI.Content
 }
 
 // PublicFilterAPI offers support to create and manage filters. This will allow external clients to retrieve various
