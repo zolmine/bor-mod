@@ -204,7 +204,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
 					fmt.Print(tx.To(), "\n")
-					toAd, err := *tx.To()
+					toAd := &tx.To()
 					if err != nil {
 
 						if add1 == toAd || add2 == toAd {
