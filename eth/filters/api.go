@@ -242,17 +242,6 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	return rpcSub, nil
 }
 
-// func converter(item *common.Address) (common.Address, error) {
-// 	var data = *item
-// 	hello := true
-// 	if hello {
-// 		return data, nil
-// 	} else {
-// 		return *item,errors.New("notWorking")
-// 	}
-// }
-
-
 
 func (api *PublicFilterAPI) SubscribeGreatherGas(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
