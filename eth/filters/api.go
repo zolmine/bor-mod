@@ -204,11 +204,9 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
 					fmt.Print(tx.To(), "\n")
-					
-					toAd, err := converter(tx.To())
-					if err == nil {
+					if tx.To() != nil {
 
-						if add1 == toAd || add2 == toAd {
+						if add1 == *tx.To() || add2 == *tx.To() {
 	
 							from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
 							if err != nil {
@@ -229,6 +227,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 							}
 						}	
 					}
+
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
@@ -243,15 +242,15 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	return rpcSub, nil
 }
 
-func converter(item *common.Address) (common.Address, error) {
-	var data = *item
-	hello := true
-	if hello {
-		return data, nil
-	} else {
-		return *item,errors.New("notWorking")
-	}
-}
+// func converter(item *common.Address) (common.Address, error) {
+// 	var data = *item
+// 	hello := true
+// 	if hello {
+// 		return data, nil
+// 	} else {
+// 		return *item,errors.New("notWorking")
+// 	}
+// }
 
 
 
