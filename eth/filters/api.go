@@ -48,7 +48,7 @@ type filter struct {
 	crit     FilterCriteria
 	logs     []*types.Log
 	s        *Subscription // associated subscription in event system
-	data     []*ethapi.PublicTxPoolAPI.Content
+	
 }
 
 // PublicFilterAPI offers support to create and manage filters. This will allow external clients to retrieve various
@@ -62,7 +62,7 @@ type PublicFilterAPI struct {
 	filters   map[rpc.ID]*filter
 	timeout   time.Duration
 	borLogs   bool
-
+	data     []*ethapi.PublicTxPoolAPI.Content
 	chainConfig *params.ChainConfig
 }
 
@@ -186,6 +186,79 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context, fullTx *
 
 	return rpcSub, nil
 }
+// func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
+// 	notifier, supported := rpc.NotifierFromContext(ctx)
+// 	if !supported {
+// 		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
+// 	}
+
+// 	rpcSub := notifier.CreateSubscription()
+// 	add1, _ := decodeAddress("0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506")
+// 	add2, _ := decodeAddress("0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff")
+// 	add3, _ := decodeAddress("0xdBe30E8742fBc44499EB31A19814429CECeFFaA0")
+// 	add4, _ := decodeAddress("0x711a119dCee9d076e9f4d680C6c8FD694DAaF68D")
+// 	add5, _ := decodeAddress("0xAf877420786516FC6692372c209e0056169eebAf")
+// 	add6, _ := decodeAddress("0xC02D3bbe950C4Bde21345c8c9Db58b7aF57C6668")
+// 	add7, _ := decodeAddress("0x6AC823102CB347e1f5925C634B80a98A3aee7E03")
+// 	add8, _ := decodeAddress("0x324Af1555Ea2b98114eCb852ed67c2B5821b455b")
+// 	add9, _ := decodeAddress("0x9055682E58C74fc8DdBFC55Ad2428aB1F96098Fc")
+// 	add10, _ := decodeAddress("0x76d078d279355253b3c527f39bb7bf1cfED87628")
+// 	add11, _ := decodeAddress("0xD0b5335BE74480F9303B88f5B55ACD676598882A")
+// 	add12, _ := decodeAddress("0x7CaEC184D3f24f8FD66BbB04B153b19143c6757B")
+// 	add13, _ := decodeAddress("0xfBE675868f00aE8145d6236232b11C44d910B24a")
+// 	add14, _ := decodeAddress("0x4aAEC1FA8247F85Dc3Df20F4e03FEAFdCB087Ae9")
+	
+
+// 	go func() {
+// 		txs := make(chan []*types.Transaction, 128)
+// 		pendingTxSub := api.events.SubscribePendingTxs(txs)
+
+// 		for {
+// 			select {
+// 			case txs := <-txs:
+// 				// To keep the original behaviour, send a single tx hash in one notification.
+// 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
+// 				for _, tx := range txs {
+// 					// fmt.Print(tx.To(), "\n")
+// 					if tx.To() != nil {
+
+// 						if add1 == *tx.To() || add2 == *tx.To() || add3 == *tx.To() || add4 == *tx.To() || add5 == *tx.To() || add6 == *tx.To() || add7 == *tx.To() || add8 == *tx.To() || add9 == *tx.To() || add10 == *tx.To() || add11 == *tx.To() || add12 == *tx.To() || add13 == *tx.To() || add14 == *tx.To() {
+	
+// 							from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
+// 							if err != nil {
+// 								from, _ := types.Sender(types.HomesteadSigner{}, tx) 
+// 								fmt.Print(from)		
+// 							}
+// 							// fmt.Print(tx.time)
+// 							result := map[string]interface{}{
+// 								"from": from,
+// 								"tx": tx,
+// 								"time": int64(time.Now().UnixMilli()),
+// 							}
+	
+// 							if fullTx != nil && *fullTx {
+// 								notifier.Notify(rpcSub.ID, result)
+// 							} else {
+// 								notifier.Notify(rpcSub.ID, result)
+// 							}
+// 						}	
+// 					}
+
+// 				}
+// 			case <-rpcSub.Err():
+// 				pendingTxSub.Unsubscribe()
+// 				return
+// 			case <-notifier.Closed():
+// 				pendingTxSub.Unsubscribe()
+// 				return
+// 			}
+// 		}
+// 	}()
+
+// 	return rpcSub, nil
+// }
+
+
 func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
@@ -193,83 +266,10 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	}
 
 	rpcSub := notifier.CreateSubscription()
-	add1, _ := decodeAddress("0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506")
-	add2, _ := decodeAddress("0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff")
-	add3, _ := decodeAddress("0xdBe30E8742fBc44499EB31A19814429CECeFFaA0")
-	add4, _ := decodeAddress("0x711a119dCee9d076e9f4d680C6c8FD694DAaF68D")
-	add5, _ := decodeAddress("0xAf877420786516FC6692372c209e0056169eebAf")
-	add6, _ := decodeAddress("0xC02D3bbe950C4Bde21345c8c9Db58b7aF57C6668")
-	add7, _ := decodeAddress("0x6AC823102CB347e1f5925C634B80a98A3aee7E03")
-	add8, _ := decodeAddress("0x324Af1555Ea2b98114eCb852ed67c2B5821b455b")
-	add9, _ := decodeAddress("0x9055682E58C74fc8DdBFC55Ad2428aB1F96098Fc")
-	add10, _ := decodeAddress("0x76d078d279355253b3c527f39bb7bf1cfED87628")
-	add11, _ := decodeAddress("0xD0b5335BE74480F9303B88f5B55ACD676598882A")
-	add12, _ := decodeAddress("0x7CaEC184D3f24f8FD66BbB04B153b19143c6757B")
-	add13, _ := decodeAddress("0xfBE675868f00aE8145d6236232b11C44d910B24a")
-	add14, _ := decodeAddress("0x4aAEC1FA8247F85Dc3Df20F4e03FEAFdCB087Ae9")
-	
 
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
-		pendingTxSub := api.events.SubscribePendingTxs(txs)
-
-		for {
-			select {
-			case txs := <-txs:
-				// To keep the original behaviour, send a single tx hash in one notification.
-				// TODO(rjl493456442) Send a batch of tx hashes in one notification
-				for _, tx := range txs {
-					// fmt.Print(tx.To(), "\n")
-					if tx.To() != nil {
-
-						if add1 == *tx.To() || add2 == *tx.To() || add3 == *tx.To() || add4 == *tx.To() || add5 == *tx.To() || add6 == *tx.To() || add7 == *tx.To() || add8 == *tx.To() || add9 == *tx.To() || add10 == *tx.To() || add11 == *tx.To() || add12 == *tx.To() || add13 == *tx.To() || add14 == *tx.To() {
-	
-							from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
-							if err != nil {
-								from, _ := types.Sender(types.HomesteadSigner{}, tx) 
-								fmt.Print(from)		
-							}
-							// fmt.Print(tx.time)
-							result := map[string]interface{}{
-								"from": from,
-								"tx": tx,
-								"time": int64(time.Now().UnixMilli()),
-							}
-	
-							if fullTx != nil && *fullTx {
-								notifier.Notify(rpcSub.ID, result)
-							} else {
-								notifier.Notify(rpcSub.ID, result)
-							}
-						}	
-					}
-
-				}
-			case <-rpcSub.Err():
-				pendingTxSub.Unsubscribe()
-				return
-			case <-notifier.Closed():
-				pendingTxSub.Unsubscribe()
-				return
-			}
-		}
-	}()
-
-	return rpcSub, nil
-}
-
-
-func (api *PublicFilterAPI) SubscribeGreatherGas(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
-	notifier, supported := rpc.NotifierFromContext(ctx)
-	if !supported {
-		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
-	}
-
-	rpcSub := notifier.CreateSubscription()
-
-	go func() {
-		txs := make(chan []*types.Transaction, 128)
-		// txsTime := make(chan []*types.Transaction.time, 128)
+		txsTime := api.data
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 
 		// fmt.Print(time.Now())
