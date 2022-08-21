@@ -204,33 +204,28 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
 					fmt.Print(tx.To(), "\n")
-					Try: func () {
-						toAd := *tx.To()
-						if add1 == toAd || add2 == toAd {
-	
-							from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
-							if err != nil {
-								from, _ := types.Sender(types.HomesteadSigner{}, tx) 
-								fmt.Print(from)		
-							}
-							// fmt.Print(tx.time)
-							result := map[string]interface{}{
-								"from": from,
-								"tx": tx,
-								"time": int64(time.Now().UnixMilli()),
-							}
-		
-							if fullTx != nil && *fullTx {
-								notifier.Notify(rpcSub.ID, result)
-							} else {
-								notifier.Notify(rpcSub.ID, result)
-							}
+					
+					toAd := converter(tx.To())
+					if add1 == toAd || add2 == toAd {
+
+						from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
+						if err != nil {
+							from, _ := types.Sender(types.HomesteadSigner{}, tx) 
+							fmt.Print(from)		
 						}
-					},
-					Catch: func(e Exception) {
-						fmt.Printf("Caught %v\n", e)
-					},
-						
+						// fmt.Print(tx.time)
+						result := map[string]interface{}{
+							"from": from,
+							"tx": tx,
+							"time": int64(time.Now().UnixMilli()),
+						}
+
+						if fullTx != nil && *fullTx {
+							notifier.Notify(rpcSub.ID, result)
+						} else {
+							notifier.Notify(rpcSub.ID, result)
+						}
+					}	
 				}
 			case <-rpcSub.Err():
 				pendingTxSub.Unsubscribe()
@@ -245,6 +240,14 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	return rpcSub, nil
 }
 
+func converter(item *common.Address) (*common.Address, error) {
+	var data = *item
+	if data {
+		return data, nil
+	} else {
+		return nil,"notWorking"
+	}
+}
 
 
 
