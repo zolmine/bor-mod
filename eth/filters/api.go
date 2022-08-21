@@ -240,7 +240,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	return rpcSub, nil
 }
 
-func converter(item *common.Address) (*common.Address, error) {
+func converter(item *common.Address) (common.Address, error) {
 	var data = *item
 	if data {
 		return data, nil
