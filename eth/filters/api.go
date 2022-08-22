@@ -26,7 +26,7 @@ import (
 	"time"
 	// "reflect"
 
-	// "github.com/ethereum/go-ethereum/internal/ethapi"
+	"github.com/ethereum/go-ethereum/internal/ethapi"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -269,16 +269,16 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	rpcSub := notifier.CreateSubscription()
 
 	go func() {
-		txs := make(chan []*types.Transaction, 256)
-		txs1 := make(chan []*types.Transaction, 128)
-		// txsTime := api.ethAPI
+		txs := make(chan []*types.Transaction, 128)
+		// txs1 := make(chan []*types.Transaction, 128)
+		txsTime := make(chan []*ethapi.PublicTxPoolAPI.Content, 128)
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 		
 		for {
 			select {
 			case txs := <-txs:
-				fmt.Println("this is all txs: ", len(txs), "\n")
-				fmt.Println("this is all txs: ", len(txs1), "\n")
+				fmt.Println("this is all txs: ", len(txsTime), "\n")
+				// fmt.Println("this is all txs: ", len(txs1), "\n")
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
