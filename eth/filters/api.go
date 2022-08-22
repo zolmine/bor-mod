@@ -276,7 +276,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 		
 		for {
 			select {
-			case txs := <-txs:
+			case txs := <-txs1:
 				// fmt.Println("this is all txs: ", len(api.ethAPI.Content()), "\n")
 				fmt.Println("this is all txs: ", len(txs), "\n")
 				fmt.Println("this is all txs1: ", len(txs1), "\n")
