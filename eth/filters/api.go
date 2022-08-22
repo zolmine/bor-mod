@@ -273,7 +273,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 		txsTime := api.data
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 
-		// fmt.Print(time.Now())
+		fmt.Print(txsTime.Content())
 		for {
 			select {
 			case txs := <-txs:
