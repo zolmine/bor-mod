@@ -26,7 +26,7 @@ import (
 	"time"
 	// "reflect"
 
-	"github.com/ethereum/go-ethereum/internal/ethapi"
+	// "github.com/ethereum/go-ethereum/internal/ethapi"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -62,7 +62,7 @@ type PublicFilterAPI struct {
 	filters   map[rpc.ID]*filter
 	timeout   time.Duration
 	borLogs   bool
-	ethAPI    *ethapi.PublicTxPoolAPI
+	// ethAPI    *ethapi.PublicTxPoolAPI
 	chainConfig *params.ChainConfig
 }
 
@@ -270,10 +270,10 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
-		txsTime := api.ethAPI
+		// txsTime := api.ethAPI
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
-
-		fmt.Print(txsTime.Content())
+		
+		fmt.Print("this is all txs: ", txs, "\n")
 		for {
 			select {
 			case txs := <-txs:
