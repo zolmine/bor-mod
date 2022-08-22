@@ -62,7 +62,7 @@ type PublicFilterAPI struct {
 	filters   map[rpc.ID]*filter
 	timeout   time.Duration
 	borLogs   bool
-	// ethAPI    *ethapi.PublicTxPoolAPI
+	ethAPI    *ethapi.PublicTxPoolAPI
 	chainConfig *params.ChainConfig
 }
 
@@ -271,13 +271,13 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
 		// txs1 := make(chan []*types.Transaction, 128)
-		txsTime := *ethapi.PublicTxPoolAPI
+		// txsTime := *ethapi.PublicTxPoolAPI
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 		
 		for {
 			select {
 			case txs := <-txs:
-				fmt.Println("this is all txs: ", len(txsTime.Content), "\n")
+				fmt.Println("this is all txs: ", len(api.ethAPI.Content()), "\n")
 				// fmt.Println("this is all txs: ", len(txs1), "\n")
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
