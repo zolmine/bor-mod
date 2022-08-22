@@ -270,7 +270,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
-		txs1 := make(chan []*types.TxWithMinerFee, 128)
+		txs1 := make(chan []*types.Transaction, 128)
 		// txsTime := *ethapi.PublicTxPoolAPI
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 		
@@ -291,7 +291,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 					// fmt.Print(tx.time)
 					result := map[string]interface{}{
 						"from": from,
-						"tx": txs,
+						"tx": tx,
 						"time": int64(time.Now().UnixMilli()),
 					}
 
