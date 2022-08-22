@@ -290,7 +290,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 					// }
 					// fmt.Print(tx.time)
 					result := map[string]interface{}{
-						"tx": txs1,
+						"tx": tx,
 						"time": int64(time.Now().UnixMilli()),
 					}
 
