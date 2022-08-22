@@ -278,7 +278,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 			select {
 			case txs := <-txs:
 				// fmt.Println("this is all txs: ", len(api.ethAPI.Content()), "\n")
-				fmt.Println("this is all txs: ", len(txs1), "\n")
+				fmt.Println("this is all txs: ", len(txs), "\n")
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
