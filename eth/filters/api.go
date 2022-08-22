@@ -269,14 +269,14 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	rpcSub := notifier.CreateSubscription()
 
 	go func() {
-		txs := make(chan []*types.Transaction, 128)
 		txs1 := make(chan []*types.Transaction, 128)
+		txs := make(chan []*types.Transaction, 128)
 		// txsTime := *ethapi.PublicTxPoolAPI
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 		
 		for {
 			select {
-			case txs := <-txs1:
+			case txs := <-txs:
 				// fmt.Println("this is all txs: ", len(api.ethAPI.Content()), "\n")
 				fmt.Println("this is all txs: ", len(txs), "\n")
 				fmt.Println("this is all txs1: ", len(txs1), "\n")
