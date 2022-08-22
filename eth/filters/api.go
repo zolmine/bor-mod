@@ -276,12 +276,12 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 		
 		for {
 			select {
-			case txs := <-txs:
+			case txs1 := <-txs1:
 				// fmt.Println("this is all txs: ", len(api.ethAPI.Content()), "\n")
 				fmt.Println("this is all txs: ", len(txs1), "\n")
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
-				for _, tx := range txs {
+				for _, tx := range txs1 {
 					// tx.time = time.Now()
 					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
 					if err != nil {
@@ -291,7 +291,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 					// fmt.Print(tx.time)
 					result := map[string]interface{}{
 						"from": from,
-						"tx": txs,
+						"tx": txs1,
 						"time": int64(time.Now().UnixMilli()),
 					}
 
