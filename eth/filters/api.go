@@ -269,14 +269,14 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	rpcSub := notifier.CreateSubscription()
 
 	go func() {
-		txs := make(chan []*types.Transaction, 128)
+		txs := make(chan []*types.Transaction, 256)
 		// txsTime := api.ethAPI
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 		
-		fmt.Print("this is all txs: ", txs, "\n")
 		for {
 			select {
 			case txs := <-txs:
+				fmt.Print("this is all txs: ", txs, "\n")
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
