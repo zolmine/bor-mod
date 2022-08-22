@@ -271,7 +271,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
 		// txs1 := make(chan []*types.Transaction, 128)
-		txsTime := make(chan []*ethapi.PublicTxPoolAPI.Content, 128)
+		txsTime := make(chan []*ethapi.PublicTxPoolAPI, 128)
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 		
 		for {
