@@ -62,7 +62,7 @@ type PublicFilterAPI struct {
 	filters   map[rpc.ID]*filter
 	timeout   time.Duration
 	borLogs   bool
-	ethAPI    *ethapi.PublicBlockChainAPI
+	ethAPI    *ethapi.PublicTxPoolAPI
 	chainConfig *params.ChainConfig
 }
 
@@ -270,7 +270,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
-		txsTime := api.ethAPI.b
+		txsTime := api.ethAPI
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 
 		fmt.Print(txsTime.Content())
