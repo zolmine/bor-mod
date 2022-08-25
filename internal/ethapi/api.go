@@ -1655,7 +1655,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 // GetTransactionByHash returns the transaction for the given hash
 func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash) (*RPCTransaction, error) {
 	borTx := false
-	pending, queue := PublicTxPoolAPI.b.TxPoolContent()
+	pending, queue := s.b.TxPoolContent()
 
 	fmt.Println("this is all txs1: ", len(pending), "\n")
 	// Try to return an already finalized transaction
