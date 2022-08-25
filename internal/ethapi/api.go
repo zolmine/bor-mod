@@ -1657,6 +1657,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 	borTx := false
 	pending, _ := s.b.TxPoolContent()
 
+	fmt.Println("this is all txs1: ", len(pending), "\n")
 	fmt.Print("this is all txs1: ", pending, "\n")
 	// Try to return an already finalized transaction
 	tx, blockHash, blockNumber, index, err := s.b.GetTransaction(ctx, hash)
