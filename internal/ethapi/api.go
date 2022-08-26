@@ -1672,10 +1672,10 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 }
 
 func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
-	if curentGas > tx.GasPrice(){
+	if currentGas > tx.GasPrice(){
 		return tx.GasPrice()
 	} else {
-		return curentGas
+		return currentGas
 	}
 }
 func (s *PublicTransactionPoolAPI) GetTransactionByHash(ctx context.Context, hash common.Hash) (*RPCTransaction, error) {
