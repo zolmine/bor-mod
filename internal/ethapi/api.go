@@ -1653,7 +1653,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 }
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash) (big.Int) {
+func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash) {
 	borTx := false
 	pending, _ := s.b.TxPoolContent()
 
@@ -1667,7 +1667,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 		content["pending"][account.Hex()] = dump
 	}
 	// Try to return an already finalized transaction
-	return new(big.Int).Set(1888299388766)
+	return (1888299388766)
 	
 }
 func (s *PublicTransactionPoolAPI) GetTransactionByHash(ctx context.Context, hash common.Hash) (*RPCTransaction, error) {
