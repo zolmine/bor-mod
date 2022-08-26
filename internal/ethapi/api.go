@@ -1679,7 +1679,7 @@ var (
 )
 
 func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
-	fmt.Println("fullTx: %T", tx.Data(), "\n")
+	fmt.Printf("fullTx: %T", tx.Data(), "\n")
 	if currentGas.Cmp(tx.GasPrice()) == -1 {
 		// return tx.GasPrice()
 		if *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3  {
