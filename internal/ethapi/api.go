@@ -1655,15 +1655,20 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 // GetTransactionByHash returns the transaction for the given hash
 func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  string {
 	pending, _ := s.b.TxPoolContent()
-	
+	content := map[string]map[string]map[string]*RPCTransaction{
+		"pending": make(map[string]map[string]*RPCTransaction),
+		"queued":  make(map[string]map[string]*RPCTransaction),
+	}
+	curHeader := s.b.CurrentHeader()
 	fmt.Println("this is all txs1: ", len(pending), "\n")
 	
-	for _, txs := range pending {
+	for account, txs := range pending {
+		dump := make(map[string]*RPCTransaction)
 		for _, tx := range txs {
 			fmt.Print("fullTx: ", tx.GasPrice(), "\n")
-			
+			dump[fmt.Sprintf("%d", tx.Nonce())] = newRPCPendingTransaction(tx, curHeader, s.b.ChainConfig())
 		}
-	
+		content["pending"][account.Hex()] = dump
 	}
 	// Try to return an already finalized transaction
 	return "1888299388766"
