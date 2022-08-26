@@ -1690,7 +1690,11 @@ func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 		// fmt.Print(input, "\n")
 		// return tx.GasPrice()
 		if *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || string(input[0:4]) == inp1 || string(input[0:4]) == inp2 || string(input[0:4]) == inp3  {
-			return tx.GasPrice()
+			if typeTx == 2 {
+				return tx.GasFeeCap()
+			} else {
+				return tx.GasPrice()
+			}
 		} else {
 			return currentGas
 		}
