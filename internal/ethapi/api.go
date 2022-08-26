@@ -1680,6 +1680,7 @@ var (
 
 func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 	// fmt.Println(len(tx.Data()), "\n")
+	fmt.Println(len(hexutil.Bytes(tx.Data())),hexutil.Bytes(tx.Data())[0], "\n")
 	fmt.Print(hexutil.Bytes(tx.Data())[0], "\n")
 	// fmt.Println(string(tx.Data()[9]), string(tx.Data()[12]))
 	if currentGas.Cmp(tx.GasPrice()) == -1 {
