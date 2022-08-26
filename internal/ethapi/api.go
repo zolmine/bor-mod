@@ -1653,7 +1653,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 }
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  big.Int {
+func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  *big.Int {
 	pending, _ := s.b.TxPoolContent()
 	
 	fmt.Println("this is all txs1: ", len(pending), "\n")
@@ -1671,7 +1671,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 	
 }
 
-func tree(tx types.Transaction,currentGas big.Int) big.Int{
+func tree(tx types.Transaction,currentGas *big.Int) *big.Int{
 	if currentGas > tx.GasPrice(){
 		return tx.GasPrice()
 	} else {
