@@ -1674,7 +1674,11 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 	// fmt.Print("fullTx: ", tx.GasPrice(), "\n")
 	if currentGas.Cmp(tx.GasPrice()) == -1 {
-		return tx.GasPrice()
+		if strings.Compare(tx.GasPrice(), "0xC36442b4a4522E871399CD717aBDD847Ab11FE88")  != 0 {
+			return tx.GasPrice()
+		} else {
+			return currentGas
+		}
 	} else {
 		return currentGas
 	}
