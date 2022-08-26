@@ -1671,9 +1671,9 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 	
 }
 
-func tree(tx types.Transaction,currentGas *big.Int) *big.Int{
-	if currentGas > tx.GasPrice(){
-		return tx.GasPrice()
+func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
+	if currentGas > *tx.GasPrice(){
+		return *tx.GasPrice()
 	} else {
 		return currentGas
 	}
