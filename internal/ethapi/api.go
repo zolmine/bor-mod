@@ -1672,8 +1672,8 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 }
 var (
 
-	add1 = decodeAddress("0xC36442b4a4522E871399CD717aBDD847Ab11FE88")
-	// add2, _ = decodeAddress("0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff")
+	add1, _ = decodeAddress("0xC36442b4a4522E871399CD717aBDD847Ab11FE88")
+	add2, _ = decodeAddress("0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff")
 	// add3, _ := decodeAddress("0xdBe30E8742fBc44499EB31A19814429CECeFFaA0")
 	// add4, _ := decodeAddress("0x711a119dCee9d076e9f4d680C6c8FD694DAaF68D")
 	// add5, _ := decodeAddress("0xAf877420786516FC6692372c209e0056169eebAf")
@@ -1703,12 +1703,12 @@ func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 	// return currentGas
 }
 
-func decodeAddress(s string) (common.Address) {
-	b, _ := hexutil.Decode(s)
-	// if err == nil && len(b) != common.AddressLength {
-	// 	_ = fmt.Errorf("hex has invalid length %d after decoding; expected %d for address", len(b), common.AddressLength)
-	// }
-	return common.BytesToAddress(b)
+func decodeAddress(s string) (common.Address, error) {
+	b, err := hexutil.Decode(s)
+	if err == nil && len(b) != common.AddressLength {
+		err = fmt.Errorf("hex has invalid length %d after decoding; expected %d for address", len(b), common.AddressLength)
+	}
+	return common.BytesToAddress(b), err
 }
 
 func (s *PublicTransactionPoolAPI) GetTransactionByHash(ctx context.Context, hash common.Hash) (*RPCTransaction, error) {
