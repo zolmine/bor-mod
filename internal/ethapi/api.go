@@ -1656,7 +1656,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  *big.Int {
 	pending, _ := s.b.TxPoolContent()
 	
-	fmt.Println("this is all txs1: ", len(pending), "\n")
+	// fmt.Println("this is all txs1: ", len(pending), "\n")
 	curentGas := big.NewInt(0)
 	for _, txs := range pending {
 		for _, tx := range txs {
@@ -1686,8 +1686,8 @@ func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 	input := hexutil.Bytes(tx.Data())
 
 	if currentGas.Cmp(tx.GasPrice()) == -1 && len(input) > 10 {
-		fmt.Println(len(input),input[0:4], "\n")
-		fmt.Print(input, "\n")
+		// fmt.Println(len(input),input[0:4], "\n")
+		// fmt.Print(input, "\n")
 		// return tx.GasPrice()
 		if *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || string(input[0:4]) == inp1 || string(input[0:4]) == inp2 || string(input[0:4]) == inp3  {
 			return tx.GasPrice()
