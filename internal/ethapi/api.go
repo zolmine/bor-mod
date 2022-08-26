@@ -1660,7 +1660,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 	curentGas := big.NewInt(0)
 	for _, txs := range pending {
 		for _, tx := range txs {
-			fmt.Print("fullTx: ", tx.GasPrice(), "\n")
+			// fmt.Print("fullTx: ", tx.GasPrice(), "\n")
 			curentGas = tree(tx,curentGas)
 			
 		}
