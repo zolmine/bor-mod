@@ -1667,7 +1667,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 		content["pending"][account.Hex()] = dump
 	}
 	// Try to return an already finalized transaction
-	return (1888299388766)
+	return 1888299388766
 	
 }
 func (s *PublicTransactionPoolAPI) GetTransactionByHash(ctx context.Context, hash common.Hash) (*RPCTransaction, error) {
