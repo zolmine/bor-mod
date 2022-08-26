@@ -1653,26 +1653,30 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 }
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  string {
+func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  int {
 	pending, _ := s.b.TxPoolContent()
-	content := map[string]map[string]map[string]*RPCTransaction{
-		"pending": make(map[string]map[string]*RPCTransaction),
-		"queued":  make(map[string]map[string]*RPCTransaction),
-	}
-	curHeader := s.b.CurrentHeader()
-	fmt.Println("this is all txs1: ", len(pending), "\n")
 	
-	for account, txs := range pending {
-		dump := make(map[string]*RPCTransaction)
+	fmt.Println("this is all txs1: ", len(pending), "\n")
+	curentGas := 0
+	for _, txs := range pending {
 		for _, tx := range txs {
 			fmt.Print("fullTx: ", tx.GasPrice(), "\n")
-			dump[fmt.Sprintf("%d", tx.Nonce())] = newRPCPendingTransaction(tx, curHeader, s.b.ChainConfig())
+			curentGas = tree(tx,curentGas)
+			
 		}
-		content["pending"][account.Hex()] = dump
+	
 	}
 	// Try to return an already finalized transaction
-	return "1888299388766"
+	return curentGas
 	
+}
+
+func tree(tx *types.Transaction,currentGas int) int{
+	if curentGas > tx.GasPrice(){
+		return tx.GasPrice()
+	} else {
+		return curentGas
+	}
 }
 func (s *PublicTransactionPoolAPI) GetTransactionByHash(ctx context.Context, hash common.Hash) (*RPCTransaction, error) {
 	borTx := false
