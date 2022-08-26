@@ -1662,9 +1662,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 		for _, tx := range txs {
 			// fmt.Print("fullTx: ", tx.GasPrice(), "\n")
 			curentGas = tree(tx,curentGas)
-			
 		}
-	
 	}
 	// Try to return an already finalized transaction
 	return curentGas
@@ -1684,6 +1682,8 @@ var (
 func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 
 	input := hexutil.Bytes(tx.Data())
+	typeTx := hexutil.Uint64(tx.Type())
+	fmt.Print(typeTx, "\n")
 
 	if currentGas.Cmp(tx.GasPrice()) == -1 && len(input) > 11 {
 		// fmt.Println(len(input),input[0:4], "\n")
