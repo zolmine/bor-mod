@@ -1653,7 +1653,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 }
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  (number) {
+func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  (*number) {
 	borTx := false
 	pending, _ := s.b.TxPoolContent()
 	content := map[string]map[string]map[string]*RPCTransaction{
