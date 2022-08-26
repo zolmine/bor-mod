@@ -1683,7 +1683,7 @@ func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 	input := hexutil.Bytes(tx.Data())
 
 	if currentGas.Cmp(tx.GasPrice()) == -1 && len(input) > 10 {
-		fmt.Println(len(input),input[0:5], "\n")
+		fmt.Println(len(input),input[0:4], "\n")
 		fmt.Print(input, "\n")
 		// return tx.GasPrice()
 		if *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3  {
