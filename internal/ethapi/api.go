@@ -1659,16 +1659,16 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 
 	fmt.Println("this is all txs1: ", len(pending), "\n")
 	fmt.Print("this is all txs1: ", pending, "\n")
+	for account, txs := range pending {
+		dump := make(map[string]*RPCTransaction)
+		for _, tx := range txs {
+			dump[fmt.Sprintf("%d", tx.Nonce())] = newRPCPendingTransaction(tx, curHeader, s.b.ChainConfig())
+		}
+		content["pending"][account.Hex()] = dump
+	}
 	// Try to return an already finalized transaction
 	return 199299
-	}
-	// No finalized transaction, try to retrieve it from the pool
-	if tx := s.b.GetPoolTransaction(hash); tx != nil {
-		return newRPCPendingTransaction(tx, s.b.CurrentHeader(), s.b.ChainConfig()), nil
-	}
-
-	// Transaction unknown, return as such
-	return nil, nil
+	
 }
 func (s *PublicTransactionPoolAPI) GetTransactionByHash(ctx context.Context, hash common.Hash) (*RPCTransaction, error) {
 	borTx := false
