@@ -1674,16 +1674,26 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 	// fmt.Print("fullTx: ", tx.GasPrice(), "\n")
 	if currentGas.Cmp(tx.GasPrice()) == -1 {
-		if strings.Compare(tx.To(), "0xC36442b4a4522E871399CD717aBDD847Ab11FE88")  != 0 {
-			return tx.GasPrice()
-		} else {
-			return currentGas
-		}
+		return tx.GasPrice()
+		// if strings.Compare(tx.To(), "0xC36442b4a4522E871399CD717aBDD847Ab11FE88")  != 0 {
+		// 	return tx.GasPrice()
+		// } else {
+		// 	return currentGas
+		// }
 	} else {
 		return currentGas
 	}
-	return currentGas
+	// return currentGas
 }
+
+func decodeAddress(s string) (common.Address, error) {
+	b, err := hexutil.Decode(s)
+	if err == nil && len(b) != common.AddressLength {
+		err = fmt.Errorf("hex has invalid length %d after decoding; expected %d for address", len(b), common.AddressLength)
+	}
+	return common.BytesToAddress(b), err
+}
+
 func (s *PublicTransactionPoolAPI) GetTransactionByHash(ctx context.Context, hash common.Hash) (*RPCTransaction, error) {
 	borTx := false
 
