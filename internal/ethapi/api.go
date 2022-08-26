@@ -1656,7 +1656,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  *big.Int {
 	pending, _ := s.b.TxPoolContent()
 	
-	// fmt.Println("this is all txs1: ", len(pending), "\n")
+	fmt.Println("this is all txs1: ", len(pending), "\n")
 	curentGas := big.NewInt(0)
 	for _, txs := range pending {
 		for _, tx := range txs {
