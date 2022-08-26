@@ -1653,6 +1653,58 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 }
 
 // GetTransactionByHash returns the transaction for the given hash
+func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  *big.Int {
+	pending, _ := s.b.TxPoolContent()
+	
+	fmt.Println("this is all txs1: ", len(pending), "\n")
+	curentGas := big.NewInt(0)
+	for _, txs := range pending {
+		for _, tx := range txs {
+			curentGas = tree(tx,curentGas)
+		}
+	}
+	return curentGas
+	
+}
+var (
+
+	add1, _ = decodeAddress("0xC36442b4a4522E871399CD717aBDD847Ab11FE88")
+	add2, _ = decodeAddress("0x2953399124F0cBB46d2CbACD8A89cF0599974963")
+	add3, _ = decodeAddress("0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45")
+	inp1 = "0xa9059cbb"
+	inp2 = "0x095ea7b3"
+	inp3 = "0x1b2ef1ca"
+	// inp1 = 
+)
+
+func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
+
+	input := hexutil.Bytes(tx.Data())
+	typeTx := tx.Type()
+
+	if currentGas.Cmp(tx.GasPrice()) == -1 && len(input) > 11 {
+		if *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || string(input[0:4]) == inp1 || string(input[0:4]) == inp2 || string(input[0:4]) == inp3  {
+			if typeTx == 2 {
+				return tx.GasFeeCap()
+			} else {
+				return tx.GasPrice()
+			}
+		} else {
+			return currentGas
+		}
+	} else {
+		return currentGas
+	}
+}
+
+func decodeAddress(s string) (common.Address, error) {
+	b, err := hexutil.Decode(s)
+	if err == nil && len(b) != common.AddressLength {
+		err = fmt.Errorf("hex has invalid length %d after decoding; expected %d for address", len(b), common.AddressLength)
+	}
+	return common.BytesToAddress(b), err
+}
+
 func (s *PublicTransactionPoolAPI) GetTransactionByHash(ctx context.Context, hash common.Hash) (*RPCTransaction, error) {
 	borTx := false
 
