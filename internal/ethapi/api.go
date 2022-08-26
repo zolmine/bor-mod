@@ -1674,7 +1674,7 @@ var (
 
 	add1, _ = decodeAddress("0xC36442b4a4522E871399CD717aBDD847Ab11FE88")
 	add2, _ = decodeAddress("0x2953399124F0cBB46d2CbACD8A89cF0599974963")
-	add3, _ := decodeAddress("0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45")
+	add3, _ = decodeAddress("0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45")
 	// inp1 = 
 )
 
