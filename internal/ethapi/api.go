@@ -1670,7 +1670,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 	return curentGas
 	
 }
-const (
+var (
 
 	add1 = decodeAddress("0xC36442b4a4522E871399CD717aBDD847Ab11FE88")
 	// add2, _ = decodeAddress("0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff")
