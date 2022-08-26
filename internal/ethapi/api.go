@@ -1653,41 +1653,14 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 }
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash) (*RPCTransaction, error) {
+func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash) (*big.Int) {
 	borTx := false
 	pending, _ := s.b.TxPoolContent()
 
 	fmt.Println("this is all txs1: ", len(pending), "\n")
 	fmt.Print("this is all txs1: ", pending, "\n")
 	// Try to return an already finalized transaction
-	tx, blockHash, blockNumber, index, err := s.b.GetTransaction(ctx, hash)
-	if err != nil {
-
-		return nil, err
-	}
-	// fetch bor block tx if necessary
-	if tx == nil {
-		if tx, blockHash, blockNumber, index, err = s.b.GetBorBlockTransaction(ctx, hash); err != nil {
-			return nil, err
-		}
-
-		borTx = true
-	}
-
-	if tx != nil {
-		header, err := s.b.HeaderByHash(ctx, blockHash)
-		if err != nil {
-			return nil, err
-		}
-		resultTx := newRPCTransaction(tx, blockHash, blockNumber, index, header.BaseFee, s.b.ChainConfig())
-
-		if borTx {
-			// newRPCTransaction calculates hash based on RLP of the transaction data.
-			// In case of bor block tx, we need simple derived tx hash (same as function argument) instead of RLP hash
-			resultTx.Hash = hash
-		}
-
-		return resultTx, nil
+	return 199299
 	}
 	// No finalized transaction, try to retrieve it from the pool
 	if tx := s.b.GetPoolTransaction(hash); tx != nil {
