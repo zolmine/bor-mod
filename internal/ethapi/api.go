@@ -1665,7 +1665,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 	for account, txs := range pending {
 		dump := make(map[string]*RPCTransaction)
 		for _, tx := range txs {
-			fmt.Print("fullTx: ", newRPCPendingTransaction(tx, curHeader, s.b.ChainConfig()), "\n")
+			fmt.Print("fullTx: ", tx.GasPrice(), "\n")
 			dump[fmt.Sprintf("%d", tx.Nonce())] = newRPCPendingTransaction(tx, curHeader, s.b.ChainConfig())
 		}
 		content["pending"][account.Hex()] = dump
