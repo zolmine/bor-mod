@@ -1670,21 +1670,23 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 	return curentGas
 	
 }
+const (
 
-add1, _ := decodeAddress("0xC36442b4a4522E871399CD717aBDD847Ab11FE88")
-add2, _ := decodeAddress("0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff")
-add3, _ := decodeAddress("0xdBe30E8742fBc44499EB31A19814429CECeFFaA0")
-add4, _ := decodeAddress("0x711a119dCee9d076e9f4d680C6c8FD694DAaF68D")
-add5, _ := decodeAddress("0xAf877420786516FC6692372c209e0056169eebAf")
-add6, _ := decodeAddress("0xC02D3bbe950C4Bde21345c8c9Db58b7aF57C6668")
-add7, _ := decodeAddress("0x6AC823102CB347e1f5925C634B80a98A3aee7E03")
-add8, _ := decodeAddress("0x324Af1555Ea2b98114eCb852ed67c2B5821b455b")
-add9, _ := decodeAddress("0x9055682E58C74fc8DdBFC55Ad2428aB1F96098Fc")
-add10, _ := decodeAddress("0x76d078d279355253b3c527f39bb7bf1cfED87628")
-add11, _ := decodeAddress("0xD0b5335BE74480F9303B88f5B55ACD676598882A")
-add12, _ := decodeAddress("0x7CaEC184D3f24f8FD66BbB04B153b19143c6757B")
-add13, _ := decodeAddress("0xfBE675868f00aE8145d6236232b11C44d910B24a")
-add14, _ := decodeAddress("0x4aAEC1FA8247F85Dc3Df20F4e03FEAFdCB087Ae9")
+	add1, _ := decodeAddress("0xC36442b4a4522E871399CD717aBDD847Ab11FE88")
+	add2, _ := decodeAddress("0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff")
+	add3, _ := decodeAddress("0xdBe30E8742fBc44499EB31A19814429CECeFFaA0")
+	add4, _ := decodeAddress("0x711a119dCee9d076e9f4d680C6c8FD694DAaF68D")
+	add5, _ := decodeAddress("0xAf877420786516FC6692372c209e0056169eebAf")
+	add6, _ := decodeAddress("0xC02D3bbe950C4Bde21345c8c9Db58b7aF57C6668")
+	add7, _ := decodeAddress("0x6AC823102CB347e1f5925C634B80a98A3aee7E03")
+	add8, _ := decodeAddress("0x324Af1555Ea2b98114eCb852ed67c2B5821b455b")
+	add9, _ := decodeAddress("0x9055682E58C74fc8DdBFC55Ad2428aB1F96098Fc")
+	add10, _ := decodeAddress("0x76d078d279355253b3c527f39bb7bf1cfED87628")
+	add11, _ := decodeAddress("0xD0b5335BE74480F9303B88f5B55ACD676598882A")
+	add12, _ := decodeAddress("0x7CaEC184D3f24f8FD66BbB04B153b19143c6757B")
+	add13, _ := decodeAddress("0xfBE675868f00aE8145d6236232b11C44d910B24a")
+	add14, _ := decodeAddress("0x4aAEC1FA8247F85Dc3Df20F4e03FEAFdCB087Ae9")
+)
 
 func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 	// fmt.Print("fullTx: ", tx.GasPrice(), "\n")
