@@ -1656,7 +1656,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  *big.Int {
 	pending, _ := s.b.TxPoolContent()
 	
-	// fmt.Println("this is all txs1: ", len(pending), "\n")
+	fmt.Println("this is all txs1: ", len(pending), "\n")
 	curentGas := big.NewInt(0)
 	for _, txs := range pending {
 		for _, tx := range txs {
@@ -1667,27 +1667,48 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 	
 }
 var (
+	
 
 	add1, _ = decodeAddress("0xC36442b4a4522E871399CD717aBDD847Ab11FE88")
 	add2, _ = decodeAddress("0x2953399124F0cBB46d2CbACD8A89cF0599974963")
 	add3, _ = decodeAddress("0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45")
+	add4, _ = decodeAddress("0x5A98E7cE0F72995fdc13D91255443F374c1299A6")
+	add5, _ = decodeAddress("0x0dC733a0C086a113a88DDAb7C4160dC097B6F89A")
+	add6, _ = decodeAddress("0xf3a3d1B89A70E291531ECB4a1299117f5dE44612")
+	add7, _ = decodeAddress("0x1D0360BaC7299C86Ec8E99d0c1C9A95FEfaF2a11")
+	add8, _ = decodeAddress("0xbce1b23c7544422f1E2208d29A6A3AA9fAbAB250")
+	add9, _ = decodeAddress("0xC37d3c4326ab0E1D2b9D8b916bBdf5715f780fcF")
+	add10, _ = decodeAddress("0x70C575588B98C1F46B1382c706AdAf398A874e3E")
+	add11, _ = decodeAddress("0x86935F11C86623deC8a25696E1C19a8659CbF95d")
+	add12, _ = decodeAddress("0xDb46d1Dc155634FbC732f92E853b10B288AD5a1d")
+	add13, _ = decodeAddress("0x4251BFEaa6f98C0AF44E7435b2808e443Ace02CA")
+	add14, _ = decodeAddress("0xBa7fb9610D15464E9f8641dEEECa7f660Ff0169a")
+
 	inp1 = "0xa9059cbb"
 	inp2 = "0x095ea7b3"
 	inp3 = "0x1b2ef1ca"
+	// creation methods
 	inp4 = "0x60806040"
 	inp5 = "0x60c06040"
+	// *****************
+	inp6 = "0xf242432a"
+	inp7 = "0x5a86c41a"
+	inp8 = "0xc9807539"
+	inp9 = "0x4e71d92d"
+	inp10 = "0x66514c97"
+	inp11 = "0x2cb31144"
+	inp12 = "0x3e58c58c"
 	// inp1 = 
 )
 
 func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 
-	// fmt.Print("to address: ", tx.To(), "\n")
 	if currentGas.Cmp(tx.GasPrice()) == -1 && len(tx.Data()) > 11 {
 		input := hexutil.Bytes(tx.Data())
-		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4 || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3  {
+		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4  || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3  || string(input[0:4]) != inp6  || string(input[0:4]) != inp7  || string(input[0:4]) != inp8  || string(input[0:4]) != inp9  || string(input[0:4]) != inp10  || string(input[0:4]) != inp11  || string(input[0:4]) != inp12  || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || *tx.To() != add4 || *tx.To() != add5 || *tx.To() != add6 || *tx.To() != add7 || *tx.To() != add8 || *tx.To() != add9 || *tx.To() != add10 || *tx.To() != add11 || *tx.To() != add12 || *tx.To() != add13 || *tx.To() != add14 {
 			typeTx := tx.Type()
 			if typeTx == 2 {
-				return tx.GasFeeCap()
+				return tx.GasTipCap()
 			} else {
 				return tx.GasPrice()
 			}
