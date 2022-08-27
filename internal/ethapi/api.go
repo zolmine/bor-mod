@@ -1674,15 +1674,16 @@ var (
 	inp1 = "0xa9059cbb"
 	inp2 = "0x095ea7b3"
 	inp3 = "0x1b2ef1ca"
+	inp4 = "0x60806040"
 	// inp1 = 
 )
 
 func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 
-	fmt.Print("to address: ", tx.To(), "\n")
+	// fmt.Print("to address: ", tx.To(), "\n")
 	if currentGas.Cmp(tx.GasPrice()) == -1 && len(tx.Data()) > 11 {
 		input := hexutil.Bytes(tx.Data())
-		if *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || string(input[0:4]) == inp1 || string(input[0:4]) == inp2 || string(input[0:4]) == inp3  {
+		if string(input[0:4]) != inp4 || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3  {
 			typeTx := tx.Type()
 			if typeTx == 2 {
 				return tx.GasFeeCap()
