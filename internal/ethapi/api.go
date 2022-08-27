@@ -1680,7 +1680,7 @@ var (
 func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 
 	
-	if currentGas.Cmp(tx.GasPrice()) == -1 && len(input) > 11 {
+	if currentGas.Cmp(tx.GasPrice()) == -1 && len(tx.Data()) > 11 {
 		input := hexutil.Bytes(tx.Data())
 		if *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || string(input[0:4]) == inp1 || string(input[0:4]) == inp2 || string(input[0:4]) == inp3  {
 			typeTx := tx.Type()
