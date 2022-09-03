@@ -1658,11 +1658,13 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 	
 	// fmt.Println("this is all txs1: ", len(pending), "\n")
 	curentGas := big.NewInt(0)
+	increaser := 0
 	for _, txs := range pending {
 		for _, tx := range txs {
-			curentGas = tree(tx,curentGas)
+			curentGas = tree(tx,curentGas,increaser)
 		}
 	}
+	fmt.Print("time increased is: ",increaser, "the maxGasValue is: ", curentGas)
 	return curentGas
 	
 }
@@ -1701,17 +1703,19 @@ var (
 	// inp1 = 
 )
 
-func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
+func tree(tx *types.Transaction,currentGas *big.Int, increaser) *big.Int{
 
 	if currentGas.Cmp(tx.GasPrice()) == -1 && len(tx.Data()) > 11 {
 		input := hexutil.Bytes(tx.Data())
 		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4  || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3  || string(input[0:4]) != inp6  || string(input[0:4]) != inp7  || string(input[0:4]) != inp8  || string(input[0:4]) != inp9  || string(input[0:4]) != inp10  || string(input[0:4]) != inp11  || string(input[0:4]) != inp12  || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || *tx.To() != add4 || *tx.To() != add5 || *tx.To() != add6 || *tx.To() != add7 || *tx.To() != add8 || *tx.To() != add9 || *tx.To() != add10 || *tx.To() != add11 || *tx.To() != add12 || *tx.To() != add13 || *tx.To() != add14 {
 			typeTx := tx.Type()
+			increaser = increaser + 1
 			if typeTx == 2 {
 				return tx.GasTipCap()
 			} else {
 				return tx.GasPrice()
 			}
+
 		} else {
 			return currentGas
 		}
