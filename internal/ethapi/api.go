@@ -1664,7 +1664,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 			curentGas = tree(tx,curentGas,increaser)
 		}
 	}
-	fmt.Print("time increased is: ",increaser, "the maxGasValue is: ", curentGas)
+	fmt.Print("time increased is: ",increaser, "  the maxGasValue is: ", curentGas, "\n")
 	return curentGas
 	
 }
