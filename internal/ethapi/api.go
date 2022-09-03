@@ -1703,7 +1703,7 @@ var (
 	// inp1 = 
 )
 
-func tree(tx *types.Transaction,currentGas *big.Int, increaser int) *big.Int, int {
+func tree(tx *types.Transaction,currentGas *big.Int, increaser int) (*big.Int, int) {
 
 	if currentGas.Cmp(tx.GasPrice()) == -1 && len(tx.Data()) > 11 {
 		input := hexutil.Bytes(tx.Data())
