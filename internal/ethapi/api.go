@@ -1703,7 +1703,7 @@ var (
 	// inp1 = 
 )
 
-func tree(tx *types.Transaction,currentGas *big.Int, increaser int) *big.Int{
+func tree(tx *types.Transaction,currentGas *big.Int, increaser int) *big.Int, int {
 
 	if currentGas.Cmp(tx.GasPrice()) == -1 && len(tx.Data()) > 11 {
 		input := hexutil.Bytes(tx.Data())
@@ -1711,16 +1711,16 @@ func tree(tx *types.Transaction,currentGas *big.Int, increaser int) *big.Int{
 			typeTx := tx.Type()
 			increaser = increaser + 1
 			if typeTx == 2 {
-				return tx.GasTipCap()
+				return tx.GasTipCap(), increaser
 			} else {
-				return tx.GasPrice()
+				return tx.GasPrice(), increaser
 			}
 
 		} else {
-			return currentGas
+			return currentGas, increaser
 		}
 	} else {
-		return currentGas
+		return currentGas, increaser
 	}
 }
 
