@@ -1661,7 +1661,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 	increaser := 0
 	for _, txs := range pending {
 		for _, tx := range txs {
-			curentGas = tree(tx,curentGas,increaser)
+			curentGas, increaser = tree(tx,curentGas,increaser)
 		}
 	}
 	fmt.Print("time increased is: ",increaser, "  the maxGasValue is: ", curentGas, "\n")
