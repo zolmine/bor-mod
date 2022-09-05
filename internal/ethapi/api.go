@@ -1734,6 +1734,12 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 
 
 // GetTransactionByHash returns the transaction for the given hash
+func (s *PublicTransactionPoolAPI) GetTransactionByHash02(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride)  (hexutil.Bytes,hexutil.Bytes, error) {
+	result, resultBefore, err := Call01(ctx, args, args0, blockNrOrHash, overrides)
+	// Try to return an already finalized transaction
+	return result, resultBefore, err
+	
+}
 func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  *big.Int {
 	pending, _ := s.b.TxPoolContent()
 	
