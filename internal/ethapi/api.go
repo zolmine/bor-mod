@@ -982,7 +982,7 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 	// blockOfTransaction := rpc.BlockNumber(blockNrOrHash)
 	blockBeforeTransaction := blockNrOrHash - 1
 	state, header, err := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
-	statebefore, headerbefore, errbefore := b.StateAndHeaderByNumberOrHash(ctx, blockBeforeTransaction)
+	statebefore, headerbefore, _ := b.StateAndHeaderByNumberOrHash(ctx, blockBeforeTransaction)
 	if state == nil || err != nil {
 		return nil, nil, err
 	}
