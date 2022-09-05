@@ -979,8 +979,8 @@ func (diff *StateOverride) Apply(state *state.StateDB) error {
 
 func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, timeout time.Duration, globalGasCap uint64) (*core.ExecutionResult, *core.ExecutionResult, error) {
 	defer func(start time.Time) { log.Debug("Executing EVM call finished", "runtime", time.Since(start)) }(time.Now())
-	blockOfTransaction := rpc.BlockNumber(blockNrOrHash)
-	blockBeforeTransaction := blockOfTransaction - 1
+	// blockOfTransaction := rpc.BlockNumber(blockNrOrHash)
+	blockBeforeTransaction := blockNrOrHash - 1
 	state, header, err := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
 	statebefore, headerbefore, errbefore := b.StateAndHeaderByNumberOrHash(ctx, blockBeforeTransaction)
 	if state == nil || err != nil {
@@ -1148,7 +1148,7 @@ func (s *PublicBlockChainAPI) Call(ctx context.Context, args TransactionArgs, bl
 	}
 	return result.Return(), result.Err
 }
-func (s *PublicBlockChainAPI) CallForTest(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) (hexutil.Bytes,hexutil.Bytes, error) {
+func (s *PublicBlockChainAPI) CallForTest(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumber, overrides *StateOverride) (hexutil.Bytes,hexutil.Bytes, error) {
 	result, resultBefore, err := DoCallForTest(ctx, s.b, args, args0, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 	if err != nil {
 		return nil, err
