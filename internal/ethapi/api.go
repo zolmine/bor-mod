@@ -1151,11 +1151,11 @@ func (s *PublicBlockChainAPI) Call(ctx context.Context, args TransactionArgs, bl
 func (s *PublicBlockChainAPI) CallForTest(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) (hexutil.Bytes,hexutil.Bytes, error) {
 	result, resultBefore, err := DoCallForTest(ctx, s.b, args, args0, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	// If the result contains a revert reason, try to unpack and return it.
 	if len(result.Revert()) > 0 {
-		return nil, newRevertError(result)
+		return nil, nil, newRevertError(result)
 	}
 	return result.Return(), resultBefore.Return(), result.Err
 }
