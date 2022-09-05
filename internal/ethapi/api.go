@@ -1028,17 +1028,17 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 
 	// Execute the message.
 	gp := new(core.GasPool).AddGas(math.MaxUint64)
-	result, err := core.ApplyMessage(evm, msg, gp)
+	result, err := core.ApplyMessage(evmOfTransactionBlock, msg, gp)
 	if err := vmError(); err != nil {
 		return nil, nil, err
 	}
-	resultBefore, err := core.ApplyMessage(evm, msg, gp)
+	resultBefore, err := core.ApplyMessage(evmBeforeTransactionBlock, msg, gp)
 	if err := vmError(); err != nil {
 		return nil, nil, err
 	}
 
 	// If the timer caused an abort, return an appropriate error message
-	if evm.Cancelled() {
+	if evmOfTransactionBlock.Cancelled() {
 		return nil, nil, fmt.Errorf("execution aborted (timeout = %v)", timeout)
 	}
 	if err != nil {
