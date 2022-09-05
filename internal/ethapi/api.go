@@ -979,10 +979,10 @@ func (diff *StateOverride) Apply(state *state.StateDB) error {
 
 func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, timeout time.Duration, globalGasCap uint64) (*core.ExecutionResult, *core.ExecutionResult, error) {
 	defer func(start time.Time) { log.Debug("Executing EVM call finished", "runtime", time.Since(start)) }(time.Now())
-	// blockOfTransaction := rpc.BlockNumber(blockNrOrHash)
-	blockBeforeTransaction := blockNrOrHash - 1
+	// // blockOfTransaction := rpc.BlockNumber(blockNrOrHash)
+	// blockBeforeTransaction := blockNrOrHash - 1
 	state, header, err := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
-	statebefore, headerbefore, _ := b.StateAndHeaderByNumberOrHash(ctx, blockBeforeTransaction)
+	statebefore, headerbefore, _ := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
 	if state == nil || err != nil {
 		return nil, nil, err
 	}
