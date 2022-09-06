@@ -1797,7 +1797,7 @@ var (
 	// inp1 = 
 )
 
-func GetBlockByNumber(ctx context.Context, number rpc.BlockNumber, fullTx bool, s *PublicTransactionPoolAPI) (map[string]interface{}, error) {
+func GetBlockByNumber(ctx context.Context, number rpc.BlockNumber, fullTx bool, s *PublicBlockChainAPI) (map[string]interface{}, error) {
 	block, err := s.b.BlockByNumber(ctx, number)
 	if block != nil && err == nil {
 		response, err := s.rpcMarshalBlock(ctx, block, true, fullTx)
