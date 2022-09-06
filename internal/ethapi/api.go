@@ -1746,20 +1746,40 @@ func DoSimulate(ctx context.Context, args TransactionArgs, args0 TransactionArgs
 
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumber, overrides *StateOverride)  (*big.Int) {
+func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumber, overrides *StateOverride)  (map[string]interface{}, error) {
 	// pending, _ := s.b.TxPoolContent()
 	var beta  *PublicBlockChainAPI
-	result, _ := GetBlockByNumber(ctx, blockNrOrHash, true, beta)
-	fmt.Println(result)
-	curentGas := big.NewInt(0)
-	// increaser := 0
-	// for _, txs := range pending {
-	// 	for _, tx := range txs {
-	// 		curentGas, increaser = tree(tx,ctx,args,blockNrOrHas,overrides,increaser)
-	// 	}
-	// }
-	// fmt.Print("time increased is: ",increaser, "  the maxGasValue is: ", curentGas, "\n")
-	return curentGas
+
+	block, err := beta.b.BlockByNumber(ctx, number)
+	if block != nil && err == nil {
+		response, err := beta.rpcMarshalBlock(ctx, block, true, fullTx)
+		if err == nil && number == rpc.PendingBlockNumber {
+			// Pending blocks need to nil out a few fields
+			for _, field := range []string{"hash", "nonce", "miner"} {
+				response[field] = nil
+			}
+		}
+
+		// append marshalled bor transaction
+		if err == nil && response != nil {
+			response = s.appendRPCMarshalBorTransaction(ctx, block, response, fullTx)
+		}
+
+		return response, err
+	}
+	return nil, err
+
+	// result, _ := GetBlockByNumber(ctx, blockNrOrHash, true, beta)
+	// fmt.Println(result)
+	// curentGas := big.NewInt(0)
+	// // increaser := 0
+	// // for _, txs := range pending {
+	// // 	for _, tx := range txs {
+	// // 		curentGas, increaser = tree(tx,ctx,args,blockNrOrHas,overrides,increaser)
+	// // 	}
+	// // }
+	// // fmt.Print("time increased is: ",increaser, "  the maxGasValue is: ", curentGas, "\n")
+	// return curentGas
 	
 }
 var (
