@@ -1753,16 +1753,24 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 	fmt.Println(blockNbr,tt)
 	
 	
-	block, err := s.b.BlockByNumber(ctx, blockNbr)
-	
+	block, err := s.b.BlockByNumber(ctx, number)
 	if block != nil && err == nil {
-		response, err := s.rpcMarshalBlock(ctx, block, true, true)
-		if err == nil && blockNrOrHash == rpc.PendingBlockNumber {
+		response, err := s.rpcMarshalBlock(ctx, block, true, fullTx)
+		if err == nil && number == rpc.PendingBlockNumber {
 			// Pending blocks need to nil out a few fields
 			for _, field := range []string{"hash", "nonce", "miner"} {
 				response[field] = nil
 			}
 		}
+
+		// append marshalled bor transaction
+		if err == nil && response != nil {
+			response = s.appendRPCMarshalBorTransaction(ctx, block, response, fullTx)
+		}
+
+		// return response, err
+	}
+	// return nil, err
 	fmt.Println(response)
 	return blockNbr
 
@@ -1823,26 +1831,7 @@ var (
 	// inp1 = 
 )
 
-func GetBlockByNumber(ctx context.Context, number rpc.BlockNumber, fullTx bool, s *PublicBlockChainAPI) (map[string]interface{}, error) {
-	block, err := s.b.BlockByNumber(ctx, number)
-	if block != nil && err == nil {
-		response, err := s.rpcMarshalBlock(ctx, block, true, fullTx)
-		if err == nil && number == rpc.PendingBlockNumber {
-			// Pending blocks need to nil out a few fields
-			for _, field := range []string{"hash", "nonce", "miner"} {
-				response[field] = nil
-			}
-		}
 
-		// append marshalled bor transaction
-		if err == nil && response != nil {
-			response = s.appendRPCMarshalBorTransaction(ctx, block, response, fullTx)
-		}
-
-		return response, err
-	}
-	return nil, err
-}
 
 func tree(tx *types.Transaction,ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, increaser int,s *PublicTransactionPoolAPI) (*big.Int, int) {
 	currentGas := big.NewInt(0)
