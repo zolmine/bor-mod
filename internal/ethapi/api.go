@@ -1750,24 +1750,26 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, a
 	// pending, _ := s.b.TxPoolContent()
 	var beta  *PublicBlockChainAPI
 
-	block, err := beta.b.BlockByNumber(ctx, blockNrOrHash)
-	if block != nil && err == nil {
-		response, err := beta.rpcMarshalBlock(ctx, block, true, true)
-		if err == nil && blockNrOrHash == rpc.PendingBlockNumber {
-			// Pending blocks need to nil out a few fields
-			for _, field := range []string{"hash", "nonce", "miner"} {
-				response[field] = nil
-			}
-		}
+	result, err := beta.GetBlockByNumber(ctx, blockNrOrHash, true)
+	return result, err
+	// block, err := beta.b.BlockByNumber(ctx, blockNrOrHash)
+	// if block != nil && err == nil {
+	// 	response, err := beta.rpcMarshalBlock(ctx, block, true, true)
+	// 	if err == nil && blockNrOrHash == rpc.PendingBlockNumber {
+	// 		// Pending blocks need to nil out a few fields
+	// 		for _, field := range []string{"hash", "nonce", "miner"} {
+	// 			response[field] = nil
+	// 		}
+	// 	}
 
-		// append marshalled bor transaction
-		if err == nil && response != nil {
-			response = beta.appendRPCMarshalBorTransaction(ctx, block, response, true)
-		}
+	// 	// append marshalled bor transaction
+	// 	if err == nil && response != nil {
+	// 		response = beta.appendRPCMarshalBorTransaction(ctx, block, response, true)
+	// 	}
 
-		return response, err
-	}
-	return nil, err
+	// 	return response, err
+	// }
+	// return nil, err
 
 	// result, _ := GetBlockByNumber(ctx, blockNrOrHash, true, beta)
 	// fmt.Println(result)
