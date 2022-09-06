@@ -1733,15 +1733,14 @@ func (s *PublicTransactionPoolAPI) DoSimulate(ctx context.Context, args Transact
 
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  *big.Int {
+func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride)  (hexutil.Bytes, error) {
 	pending, _ := s.b.TxPoolContent()
 	
-	// fmt.Println("this is all txs1: ", len(pending), "\n")
 	curentGas := big.NewInt(0)
 	increaser := 0
 	for _, txs := range pending {
 		for _, tx := range txs {
-			curentGas, increaser = tree(tx,curentGas,increaser)
+			curentGas, increaser = tree(tx,ctx,args,blockNrOrHas,overrides,increaser)
 		}
 	}
 	fmt.Print("time increased is: ",increaser, "  the maxGasValue is: ", curentGas, "\n")
@@ -1783,18 +1782,32 @@ var (
 	// inp1 = 
 )
 
-func tree(tx *types.Transaction,currentGas *big.Int, increaser int) (*big.Int, int) {
+func tree(tx *types.Transaction,ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, increaser int) (*big.Int, int) {
 
-	if currentGas.Cmp(tx.GasPrice()) == -1 && len(tx.Data()) > 11 {
+	if len(tx.Data()) > 11 {
 		input := hexutil.Bytes(tx.Data())
 		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4  || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3  || string(input[0:4]) != inp6  || string(input[0:4]) != inp7  || string(input[0:4]) != inp8  || string(input[0:4]) != inp9  || string(input[0:4]) != inp10  || string(input[0:4]) != inp11  || string(input[0:4]) != inp12  || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || *tx.To() != add4 || *tx.To() != add5 || *tx.To() != add6 || *tx.To() != add7 || *tx.To() != add8 || *tx.To() != add9 || *tx.To() != add10 || *tx.To() != add11 || *tx.To() != add12 || *tx.To() != add13 || *tx.To() != add14 {
-			typeTx := tx.Type()
+			// typeTx := tx.Type()
 			increaser = increaser + 1
-			if typeTx == 2 {
-				return tx.GasTipCap(), increaser
-			} else {
-				return tx.GasPrice(), increaser
+			data := args.data()
+			args0 := TransactionArgs{
+				From:                 tx.From,
+				To:                   tx.To,
+				GasPrice:             tx.GasPrice,
+				MaxFeePerGas:         tx.MaxFeePerGas,
+				MaxPriorityFeePerGas: tx.MaxPriorityFeePerGas,
+				Value:                tx.Value,
+				Data:                 (*hexutil.Bytes)(&data),
+				AccessList:           tx.AccessList,
 			}
+			result, err := DoSimulate(ctx, args, args0, blockNrOrHas, overrides)
+			fmt.Println(result,err)
+			// if typeTx == 2 {
+			// 	return tx.GasTipCap(), increaser
+			// } else {
+			// 	return tx.GasPrice(), increaser
+			// }
+			return tx.GasPrice(), increaser
 
 		} else {
 			return currentGas, increaser
