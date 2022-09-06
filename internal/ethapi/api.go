@@ -1717,7 +1717,7 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 }
 
 
-func DoSimulate(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) (hexutil.Bytes, error) {
+func DoSimulate(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, s *PublicTransactionPoolAPI) (hexutil.Bytes, error) {
 	resultBefore, err := DoCallForTest(ctx, s.b, args, args0, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 	if err != nil {
 		fmt.Println(err)
@@ -1745,7 +1745,7 @@ func DoSimulate(ctx context.Context, args TransactionArgs, args0 TransactionArgs
 
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumber, overrides *StateOverride)  (*big.int) {
+func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumber, overrides *StateOverride, s)  (*big.int) {
 	// pending, _ := s.b.TxPoolContent()
 	result, err := GetBlockByNumber(ctx, blockNrOrHash, true, s)
 	fmt.Println(result)
@@ -1816,7 +1816,7 @@ func GetBlockByNumber(ctx context.Context, number rpc.BlockNumber, fullTx bool, 
 	return nil, err
 }
 
-func tree(tx *types.Transaction,ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, increaser int) (*big.Int, int) {
+func tree(tx *types.Transaction,ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, increaser int,s *PublicTransactionPoolAPI) (*big.Int, int) {
 
 	if len(tx.Data()) > 11 {
 		input := hexutil.Bytes(tx.Data())
@@ -1834,7 +1834,7 @@ func tree(tx *types.Transaction,ctx context.Context, args TransactionArgs, block
 				Data:                 (*hexutil.Bytes)(&data),
 				AccessList:           tx.AccessList(),
 			}
-			result, err := DoSimulate(ctx, args, args0, blockNrOrHas, overrides)
+			result, err := DoSimulate(ctx, args, args0, blockNrOrHas, overrides,s)
 			fmt.Println(result,err)
 			// if typeTx == 2 {
 			// 	return tx.GasTipCap(), increaser
