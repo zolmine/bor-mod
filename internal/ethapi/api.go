@@ -1803,14 +1803,14 @@ func tree(tx *types.Transaction,ctx context.Context, args TransactionArgs, block
 			increaser = increaser + 1
 			data := args.data()
 			args0 := TransactionArgs{
-				From:                 tx.From,
-				To:                   tx.To,
-				GasPrice:             tx.GasPrice,
-				MaxFeePerGas:         tx.MaxFeePerGas,
-				MaxPriorityFeePerGas: tx.MaxPriorityFeePerGas,
-				Value:                tx.Value,
+				From:                 tx.From(),
+				To:                   tx.To(),
+				GasPrice:             tx.GasPrice(),
+				MaxFeePerGas:         tx.MaxFeePerGas(),
+				MaxPriorityFeePerGas: tx.MaxPriorityFeePerGas(),
+				Value:                tx.Value(),
 				Data:                 (*hexutil.Bytes)(&data),
-				AccessList:           tx.AccessList,
+				AccessList:           tx.AccessList(),
 			}
 			result, err := DoSimulate(ctx, args, args0, blockNrOrHas, overrides)
 			fmt.Println(result,err)
