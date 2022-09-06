@@ -1762,7 +1762,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, a
 
 		// append marshalled bor transaction
 		if err == nil && response != nil {
-			response = s.appendRPCMarshalBorTransaction(ctx, block, response, true)
+			response = beta.appendRPCMarshalBorTransaction(ctx, block, response, true)
 		}
 
 		return response, err
