@@ -1753,18 +1753,18 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 	fmt.Println(blockNbr,tt)
 	
 	
-	block, _ := s.b.BlockByNumber(ctx, blockNbr)
-	fmt.Println(block)
-
+	block, err := s.b.BlockByNumber(ctx, blockNbr)
+	
+	if block != nil && err == nil {
+		response, err := s.rpcMarshalBlock(ctx, block, true, true)
+		if err == nil && blockNrOrHash == rpc.PendingBlockNumber {
+			// Pending blocks need to nil out a few fields
+			for _, field := range []string{"hash", "nonce", "miner"} {
+				response[field] = nil
+			}
+		}
+	fmt.Println(response)
 	return blockNbr
-	// if block != nil && err == nil {
-	// 	response, err := beta.rpcMarshalBlock(ctx, block, true, true)
-	// 	if err == nil && blockNrOrHash == rpc.PendingBlockNumber {
-	// 		// Pending blocks need to nil out a few fields
-	// 		for _, field := range []string{"hash", "nonce", "miner"} {
-	// 			response[field] = nil
-	// 		}
-	// 	}
 
 	// 	// append marshalled bor transaction
 	// 	if err == nil && response != nil {
