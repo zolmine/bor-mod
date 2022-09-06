@@ -1753,9 +1753,9 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 	fmt.Println(blockNbr,tt)
 	
 	
-	block, err := s.b.BlockByNumber(ctx, number)
+	block, err := s.b.BlockByNumber(ctx, blockNbr)
 	if block != nil && err == nil {
-		response, err := s.rpcMarshalBlock(ctx, block, true, fullTx)
+		response, err := s.rpcMarshalBlock(ctx, block, true, true)
 		if err == nil && number == rpc.PendingBlockNumber {
 			// Pending blocks need to nil out a few fields
 			for _, field := range []string{"hash", "nonce", "miner"} {
@@ -1768,10 +1768,10 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 			response = s.appendRPCMarshalBorTransaction(ctx, block, response, fullTx)
 		}
 
+		fmt.Println(response)
 		// return response, err
 	}
 	// return nil, err
-	fmt.Println(response)
 	return blockNbr
 
 	// 	// append marshalled bor transaction
