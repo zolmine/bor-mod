@@ -1644,7 +1644,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 		return (*hexutil.Uint64)(&nonce), nil
 	}
 	// Resolve block number and use its state to ask for the nonce
-	_, _, err := s.b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
+	state, _, err := s.b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
 	if state == nil || err != nil {
 		return nil, err
 	}
@@ -1696,7 +1696,7 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 
 	// Execute the message.
 	gp := new(core.GasPool).AddGas(math.MaxUint64)
-	result, err := core.ApplyMessage(evmOfTransactionBlock, msg, gp)
+	_, err := core.ApplyMessage(evmOfTransactionBlock, msg, gp)
 	if err := vmError(); err != nil {
 		return nil, err
 	}
