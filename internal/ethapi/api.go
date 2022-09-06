@@ -1746,7 +1746,7 @@ func DoSimulate(ctx context.Context, args TransactionArgs, args0 TransactionArgs
 
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumber, overrides *StateOverride)  (map[string]interface{}, error) {
+func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride)  (map[string]interface{}, error) {
 	// pending, _ := s.b.TxPoolContent()
 	var beta  *PublicBlockChainAPI
 
