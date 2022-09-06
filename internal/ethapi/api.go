@@ -1766,9 +1766,9 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		// append marshalled bor transaction
 	
 	data := s.appendRPCMarshalBorTransaction(ctx, block, response, true)
-	fmt.Println(data["transactions"][0])
-	s := reflect.ValueOf(data["transactions"])
-	for i := 0; i < s.Len(); i++ {
+
+	toVar := reflect.ValueOf(data["transactions"])
+	for i := 0; i < toVar.Len(); i++ {
 		singleVertex := s.Index(i).Elem() // What to do here?
 		fmt.Println(singleVertex)
 	  }
