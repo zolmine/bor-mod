@@ -977,7 +977,7 @@ func (diff *StateOverride) Apply(state *state.StateDB) error {
 	return nil
 }
 
-func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, timeout time.Duration, globalGasCap uint64) (*core.ExecutionResult, *core.ExecutionResult, error) {
+func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, timeout time.Duration, globalGasCap uint64) (*core.ExecutionResult, error) {
 	defer func(start time.Time) { log.Debug("Executing EVM call finished", "runtime", time.Since(start)) }(time.Now())
 	// // blockOfTransaction := rpc.BlockNumber(blockNrOrHash)
 	// blockBeforeTransaction := blockNrOrHash - 1
@@ -1044,7 +1044,8 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 	if err != nil {
 		return result, resultBefore, fmt.Errorf("err: %w (supplied gas %d)", err, msg.Gas())
 	}
-	return result, resultBefore, nil
+	fmt.Println("the first result is: ", result)
+	return resultBefore, nil
 }
 func DoCall(ctx context.Context, b Backend, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, timeout time.Duration, globalGasCap uint64) (*core.ExecutionResult, error) {
 	defer func(start time.Time) { log.Debug("Executing EVM call finished", "runtime", time.Since(start)) }(time.Now())
@@ -1732,16 +1733,16 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 // }
 
 func (s *PublicTransactionPoolAPI) GetTransactionByHash02(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) (hexutil.Bytes, error) {
-	result, resultBefore, err := DoCallForTest(ctx, s.b, args, args0, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
+	resultBefore, err := DoCallForTest(ctx, s.b, args, args0, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 	fmt.Println(resultBefore)
 	if err != nil {
 		return nil, err
 	}
 	// If the result contains a revert reason, try to unpack and return it.
-	if len(result.Revert()) > 0 {
-		return nil, newRevertError(result)
+	if len(resultBefore.Revert()) > 0 {
+		return nil, newRevertError(resultBefore)
 	}
-	return result.Return(), result.Err
+	return resultBefore.Return(), resultBefore.Err
 }
 
 // func (s *PublicTransactionPoolAPI) GetTransactionByHash02(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride)  (hexutil.Bytes,hexutil.Bytes, error) {
