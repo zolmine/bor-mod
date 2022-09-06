@@ -1746,9 +1746,9 @@ func DoSimulate(ctx context.Context, args TransactionArgs, args0 TransactionArgs
 
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicTransactionPoolAPI, beta  *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumber, overrides *StateOverride)  (*big.Int) {
+func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumber, overrides *StateOverride)  (*big.Int) {
 	// pending, _ := s.b.TxPoolContent()
-	
+	beta := *PublicBlockChainAPI
 	result, _ := GetBlockByNumber(ctx, blockNrOrHash, true, beta)
 	fmt.Println(result)
 	curentGas := big.NewInt(0)
