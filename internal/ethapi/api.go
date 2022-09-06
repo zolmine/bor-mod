@@ -1748,12 +1748,15 @@ func DoSimulate(ctx context.Context, args TransactionArgs, args0 TransactionArgs
 // GetTransactionByHash returns the transaction for the given hash
 func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride)  rpc.BlockNumber {
 	// pending, _ := s.b.TxPoolContent()
-	// var beta  *PublicBlockChainAPI
+	var beta  *PublicBlockChainAPI
 	blockNbr,tt := blockNrOrHash.Number()
 	fmt.Println(blockNbr,tt)
-	// result, err := beta.GetBlockByNumber(ctx, blockNbr, true)
+	
+	
+	block, _ := beta.b.BlockByNumber(ctx, blockNbr)
+	fmt.Println(block)
+
 	return blockNbr
-	// block, err := beta.b.BlockByNumber(ctx, blockNrOrHash)
 	// if block != nil && err == nil {
 	// 	response, err := beta.rpcMarshalBlock(ctx, block, true, true)
 	// 	if err == nil && blockNrOrHash == rpc.PendingBlockNumber {
