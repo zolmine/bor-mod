@@ -1767,10 +1767,14 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 	
 	data := s.appendRPCMarshalBorTransaction(ctx, block, response, true)
 	fmt.Println(data["transactions"][0])
-	
-	for _, tx := range data["transactions"].([]interface{}) {
-		fmt.Println(tx)
-	}
+	s := reflect.ValueOf(data["transactions"])
+	for i := 0; i < s.Len(); i++ {
+		singleVertex := s.Index(i).Elem() // What to do here?
+		fmt.Println(singleVertex)
+	  }
+	// for _, tx := range data["transactions"].([]interface{}) {
+	// 	fmt.Println(tx)
+	// }
 		// return response, err
 	// }
 	// return nil, err
