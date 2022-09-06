@@ -1753,9 +1753,9 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 	fmt.Println(blockNbr,tt)
 	
 	
-	block, err := s.b.BlockByNumber(ctx, blockNbr)
+	block, _ := s.b.BlockByNumber(ctx, blockNbr)
 	// if block != nil && err == nil {
-	response, err := s.rpcMarshalBlock(ctx, block, true, true)
+	response, _ := s.rpcMarshalBlock(ctx, block, true, true)
 	// 	if err == nil && blockNbr == rpc.PendingBlockNumber {
 	// 		// Pending blocks need to nil out a few fields
 	// 		for _, field := range []string{"hash", "nonce", "miner"} {
