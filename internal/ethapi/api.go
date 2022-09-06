@@ -1046,7 +1046,8 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 	if err != nil {
 		return resultAfter, fmt.Errorf("err: %w (supplied gas %d)", err, msg.Gas())
 	}
-	fmt.Println("the first result is: ", result)
+	state, header, err := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
+	fmt.Println("the first result is: ",result, state)
 	return resultAfter, nil
 }
 func DoCall(ctx context.Context, b Backend, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, timeout time.Duration, globalGasCap uint64) (*core.ExecutionResult, error) {
