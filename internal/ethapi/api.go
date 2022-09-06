@@ -1748,7 +1748,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash02(ctx context.Context, a
 	pending, _ := s.b.TxPoolContent()
 	
 	fmt.Println("this is all txs1: ", len(pending), "\n")
-	curentGas := big.NewInt(0)
+	// curentGas := big.NewInt(0)
 	// for _, txs := range pending {
 	// 	for _, tx := range txs {
 	// 		// fmt.Print("fullTx: ", tx.GasPrice(), "\n")
