@@ -1696,8 +1696,9 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 
 	// Execute the message.
 	gp := new(core.GasPool).AddGas(math.MaxUint64)
-	_, err := core.ApplyMessage(evmOfTransactionBlock, msg, gp)
+	result, err := core.ApplyMessage(evmOfTransactionBlock, msg, gp)
 	if err := vmError(); err != nil {
+		fmt.Println(result)
 		return nil, err
 	}
 	resultAfter, err := core.ApplyMessage(evmOfTransactionBlock, msgAfter, gp)
