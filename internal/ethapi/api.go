@@ -1743,19 +1743,20 @@ func (s *PublicTransactionPoolAPI) Call01(ctx context.Context, args TransactionA
 	return result.Return(), resultBefore.Return(), result.Err
 }
 
-func (s *PublicTransactionPoolAPI) GetTransactionByHash02(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride)  *big.Int {
+func (s *PublicTransactionPoolAPI) GetTransactionByHash02(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride)  (hexutil.Bytes,hexutil.Bytes, error) {
+	result, resultBefore, err := DoCallForTest(ctx, s.b, args, args0, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 	pending, _ := s.b.TxPoolContent()
 	
 	fmt.Println("this is all txs1: ", len(pending), "\n")
 	curentGas := big.NewInt(0)
-	for _, txs := range pending {
-		for _, tx := range txs {
-			// fmt.Print("fullTx: ", tx.GasPrice(), "\n")
-			curentGas = tree(tx,curentGas)
-		}
-	}
+	// for _, txs := range pending {
+	// 	for _, tx := range txs {
+	// 		// fmt.Print("fullTx: ", tx.GasPrice(), "\n")
+	// 		_ = tree(tx,curentGas)
+	// 	}
+	// }
 	// Try to return an already finalized transaction
-	return curentGas
+	return result.Return(), resultBefore.Return(), err
 	
 }
 func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  *big.Int {
