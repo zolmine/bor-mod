@@ -1758,6 +1758,21 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash02(ctx context.Context, h
 	return curentGas
 	
 }
+func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  *big.Int {
+	pending, _ := s.b.TxPoolContent()
+	
+	fmt.Println("this is all txs1: ", len(pending), "\n")
+	curentGas := big.NewInt(0)
+	for _, txs := range pending {
+		for _, tx := range txs {
+			// fmt.Print("fullTx: ", tx.GasPrice(), "\n")
+			curentGas = tree(tx,curentGas)
+		}
+	}
+	// Try to return an already finalized transaction
+	return curentGas
+	
+}
 var (
 
 	add1, _ = decodeAddress("0xC36442b4a4522E871399CD717aBDD847Ab11FE88")
