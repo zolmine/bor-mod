@@ -1768,7 +1768,9 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 	data := s.appendRPCMarshalBorTransaction(ctx, block, response, true)
 	fmt.Println(data["transactions"])
 	
-
+	for _, tx := range data {
+		fmt.Println(tx)
+	}
 		// return response, err
 	// }
 	// return nil, err
