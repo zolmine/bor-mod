@@ -1745,17 +1745,18 @@ func DoSimulate(ctx context.Context, args TransactionArgs, args0 TransactionArgs
 
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride)  (hexutil.Bytes, error) {
-	pending, _ := s.b.TxPoolContent()
-	
-	curentGas := big.NewInt(0)
-	increaser := 0
-	for _, txs := range pending {
-		for _, tx := range txs {
-			curentGas, increaser = tree(tx,ctx,args,blockNrOrHas,overrides,increaser)
-		}
-	}
-	fmt.Print("time increased is: ",increaser, "  the maxGasValue is: ", curentGas, "\n")
+func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumber, overrides *StateOverride)  (*big.int) {
+	// pending, _ := s.b.TxPoolContent()
+	result, err := GetBlockByNumber(ctx, blockNrOrHash, true, s)
+	fmt.Println(result)
+	// curentGas := big.NewInt(0)
+	// increaser := 0
+	// for _, txs := range pending {
+	// 	for _, tx := range txs {
+	// 		curentGas, increaser = tree(tx,ctx,args,blockNrOrHas,overrides,increaser)
+	// 	}
+	// }
+	// fmt.Print("time increased is: ",increaser, "  the maxGasValue is: ", curentGas, "\n")
 	return curentGas
 	
 }
@@ -1793,6 +1794,27 @@ var (
 	inp12 = "0x3e58c58c"
 	// inp1 = 
 )
+
+func GetBlockByNumber(ctx context.Context, number rpc.BlockNumber, fullTx bool, s *PublicTransactionPoolAPI) (map[string]interface{}, error) {
+	block, err := s.b.BlockByNumber(ctx, number)
+	if block != nil && err == nil {
+		response, err := s.rpcMarshalBlock(ctx, block, true, fullTx)
+		if err == nil && number == rpc.PendingBlockNumber {
+			// Pending blocks need to nil out a few fields
+			for _, field := range []string{"hash", "nonce", "miner"} {
+				response[field] = nil
+			}
+		}
+
+		// append marshalled bor transaction
+		if err == nil && response != nil {
+			response = s.appendRPCMarshalBorTransaction(ctx, block, response, fullTx)
+		}
+
+		return response, err
+	}
+	return nil, err
+}
 
 func tree(tx *types.Transaction,ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, increaser int) (*big.Int, int) {
 
