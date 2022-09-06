@@ -1743,7 +1743,7 @@ func (s *PublicTransactionPoolAPI) Call01(ctx context.Context, args TransactionA
 	return result.Return(), resultBefore.Return(), result.Err
 }
 
-func (s *PublicTransactionPoolAPI) GetTransactionByHash02(ctx context.Context, hash common.Hash)  *big.Int {
+func (s *PublicTransactionPoolAPI) GetTransactionByHash02(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride)  *big.Int {
 	pending, _ := s.b.TxPoolContent()
 	
 	fmt.Println("this is all txs1: ", len(pending), "\n")
