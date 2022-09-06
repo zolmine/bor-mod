@@ -982,7 +982,7 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 	// // blockOfTransaction := rpc.BlockNumber(blockNrOrHash)
 	// blockBeforeTransaction := blockNrOrHash - 1
 	state, header, err := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
-	statebefore, headerbefore, _ := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
+	// statebefore, headerbefore, _ := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
 	if state == nil || err != nil {
 		return nil, err
 	}
@@ -1003,27 +1003,29 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 
 	// Get a new instance of the EVM.
 	msg, err := args.ToMessage(globalGasCap, header.BaseFee)
-	if err != nil {
+	msgAfter, errAfter := args0.ToMessage(globalGasCap, header.BaseFee)
+	
+
+	if err != nil || errAfter != nil {
 		return nil, err
 	}
 	evmOfTransactionBlock, vmError, err := b.GetEVM(ctx, msg, state, header, &vm.Config{NoBaseFee: true})
 	if err != nil {
 		return nil, err
 	}
-	msgBefore, err := args0.ToMessage(globalGasCap, header.BaseFee)
-	if err != nil {
-		return nil, err
-	}
-	evmBeforeTransactionBlock, vmError, err := b.GetEVM(ctx, msgBefore, statebefore, headerbefore, &vm.Config{NoBaseFee: true})
-	if err != nil {
-		return nil, err
-	}
+	
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// evmBeforeTransactionBlock, vmError, err := b.GetEVM(ctx, msgBefore, statebefore, headerbefore, &vm.Config{NoBaseFee: true})
+	// if err != nil {
+	// 	return nil, err
+	// }
 	// Wait for the context to be done and cancel the evm. Even if the
 	// EVM has finished, cancelling may be done (repeatedly)
 	go func() {
 		<-ctx.Done()
 		evmOfTransactionBlock.Cancel()
-		evmBeforeTransactionBlock.Cancel()
 	}()
 
 	// Execute the message.
@@ -1032,7 +1034,7 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 	if err := vmError(); err != nil {
 		return nil, err
 	}
-	resultBefore, err := core.ApplyMessage(evmBeforeTransactionBlock, msg, gp)
+	resultAfter, err := core.ApplyMessage(evmOfTransactionBlock, msgAfter, gp)
 	if err := vmError(); err != nil {
 		return nil, err
 	}
@@ -1042,10 +1044,10 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 		return nil, fmt.Errorf("execution aborted (timeout = %v)", timeout)
 	}
 	if err != nil {
-		return result, fmt.Errorf("err: %w (supplied gas %d)", err, msg.Gas())
+		return resultAfter, fmt.Errorf("err: %w (supplied gas %d)", err, msg.Gas())
 	}
 	fmt.Println("the first result is: ", result)
-	return resultBefore, nil
+	return resultAfter, nil
 }
 func DoCall(ctx context.Context, b Backend, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, timeout time.Duration, globalGasCap uint64) (*core.ExecutionResult, error) {
 	defer func(start time.Time) { log.Debug("Executing EVM call finished", "runtime", time.Since(start)) }(time.Now())
