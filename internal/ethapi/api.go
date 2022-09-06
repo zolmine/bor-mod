@@ -984,10 +984,10 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 	state, header, err := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
 	statebefore, headerbefore, _ := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
 	if state == nil || err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	if err := overrides.Apply(state); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	// Setup context so it may be cancelled the call has completed
 	// or, in case of unmetered gas, setup a context with a timeout.
@@ -1004,19 +1004,19 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 	// Get a new instance of the EVM.
 	msg, err := args.ToMessage(globalGasCap, header.BaseFee)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	evmOfTransactionBlock, vmError, err := b.GetEVM(ctx, msg, state, header, &vm.Config{NoBaseFee: true})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	msgBefore, err := args0.ToMessage(globalGasCap, header.BaseFee)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	evmBeforeTransactionBlock, vmError, err := b.GetEVM(ctx, msgBefore, statebefore, headerbefore, &vm.Config{NoBaseFee: true})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	// Wait for the context to be done and cancel the evm. Even if the
 	// EVM has finished, cancelling may be done (repeatedly)
@@ -1030,19 +1030,19 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 	gp := new(core.GasPool).AddGas(math.MaxUint64)
 	result, err := core.ApplyMessage(evmOfTransactionBlock, msg, gp)
 	if err := vmError(); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	resultBefore, err := core.ApplyMessage(evmBeforeTransactionBlock, msg, gp)
 	if err := vmError(); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// If the timer caused an abort, return an appropriate error message
 	if evmOfTransactionBlock.Cancelled() {
-		return nil, nil, fmt.Errorf("execution aborted (timeout = %v)", timeout)
+		return nil, fmt.Errorf("execution aborted (timeout = %v)", timeout)
 	}
 	if err != nil {
-		return result, resultBefore, fmt.Errorf("err: %w (supplied gas %d)", err, msg.Gas())
+		return result, fmt.Errorf("err: %w (supplied gas %d)", err, msg.Gas())
 	}
 	fmt.Println("the first result is: ", result)
 	return resultBefore, nil
