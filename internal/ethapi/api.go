@@ -1644,7 +1644,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 		return (*hexutil.Uint64)(&nonce), nil
 	}
 	// Resolve block number and use its state to ask for the nonce
-	state, _, err := s.b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
+	_, _, err := s.b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
 	if state == nil || err != nil {
 		return nil, err
 	}
