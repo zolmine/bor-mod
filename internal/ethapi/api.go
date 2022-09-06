@@ -1731,19 +1731,7 @@ func (s *PublicTransactionPoolAPI) GetTransactionCount(ctx context.Context, addr
 	
 // }
 
-// func (s *PublicTransactionPoolAPI) Call01(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) (hexutil.Bytes,hexutil.Bytes, error) {
-// 	result, resultBefore, err := DoCallForTest(ctx, s.b, args, args0, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-// 	// If the result contains a revert reason, try to unpack and return it.
-// 	if len(result.Revert()) > 0 {
-// 		return nil, nil, newRevertError(result)
-// 	}
-// 	return result.Return(), resultBefore.Return(), result.Err
-// }
-
-func (s *PublicTransactionPoolAPI) GetTransactionByHash02(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) (hexutil.Bytes,hexutil.Bytes, error)   {
+func (s *PublicTransactionPoolAPI) Call01(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) (hexutil.Bytes,hexutil.Bytes, error) {
 	result, resultBefore, err := DoCallForTest(ctx, s.b, args, args0, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 	if err != nil {
 		return nil, nil, err
@@ -1753,9 +1741,9 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash02(ctx context.Context, a
 		return nil, nil, newRevertError(result)
 	}
 	return result.Return(), resultBefore.Return(), result.Err
-	
 }
-func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  *big.Int {
+
+func (s *PublicTransactionPoolAPI) GetTransactionByHash02(ctx context.Context, hash common.Hash)  *big.Int {
 	pending, _ := s.b.TxPoolContent()
 	
 	fmt.Println("this is all txs1: ", len(pending), "\n")
