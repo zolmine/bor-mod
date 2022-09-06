@@ -1766,9 +1766,9 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		// append marshalled bor transaction
 		if err == nil && response != nil {
 			data := s.appendRPCMarshalBorTransaction(ctx, block, response, true)
+			fmt.Println(data)
 		}
 
-		fmt.Println(data)
 		// return response, err
 	}
 	// return nil, err
