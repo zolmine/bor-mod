@@ -1573,6 +1573,7 @@ type PublicTransactionPoolAPI struct {
 	b         Backend
 	nonceLock *AddrLocker
 	signer    types.Signer
+	beta 	  *PublicBlockChainAPI
 }
 
 // NewPublicTransactionPoolAPI creates a new RPC service with methods specific for the transaction pool.
@@ -1798,7 +1799,7 @@ var (
 func GetBlockByNumber(ctx context.Context, number rpc.BlockNumber, fullTx bool, s *PublicTransactionPoolAPI) (map[string]interface{}, error) {
 	block, err := s.b.BlockByNumber(ctx, number)
 	if block != nil && err == nil {
-		response, err := s.rpcMarshalBlock(ctx, block, true, fullTx)
+		response, err := s.beta.rpcMarshalBlock(ctx, block, true, fullTx)
 		if err == nil && number == rpc.PendingBlockNumber {
 			// Pending blocks need to nil out a few fields
 			for _, field := range []string{"hash", "nonce", "miner"} {
