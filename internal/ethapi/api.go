@@ -1766,11 +1766,11 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		// append marshalled bor transaction
 	
 	data := s.appendRPCMarshalBorTransaction(ctx, block, response, true)
-	fmt.Println(data["transactions"])
+	fmt.Println(data["transactions"][0])
 	
-	for _, tx := range data["transactions"] {
-		fmt.Println(tx)
-	}
+	// for _, tx := range data["transactions"] {
+	// 	fmt.Println(tx)
+	// }
 		// return response, err
 	// }
 	// return nil, err
