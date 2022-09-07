@@ -1755,10 +1755,10 @@ func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, bloc
 	// 	return nil, nil, nil
 	// }
 	
-	go func() {
-		<-ctx.Done()
-		evmOfTransactionBlock.Cancel()
-	}()
+	// go func() {
+	// 	<-ctx.Done()
+	// 	evmOfTransactionBlock.Cancel()
+	// }()
 
 	// Execute the message.
 	gp := new(core.GasPool).AddGas(math.MaxUint64)
