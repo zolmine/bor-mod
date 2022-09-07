@@ -1800,7 +1800,7 @@ func (s *PublicTransactionPoolAPI) DoSimulate(ctx context.Context, args Transact
 
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  rpc.BlockNumber {
+func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  *core.ExecutionResult {
 	// pending, _ := s.b.TxPoolContent()
 	// var beta  *PublicBlockChainAPI
 	blockNbr,tt := pendingBlock.Number()
@@ -1860,7 +1860,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 					fmt.Println(newRevertError(results))
 				}
 				// fmt.Println(evm)
-				fmt.Println(results.Return())
+				return (results.Return())
 				}else {
 					fmt.Println("last")
 					msg, _ := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
@@ -1884,7 +1884,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		// return response, err
 	// }
 	// return nil, err
-	return blockNbr
+	// return blockNbr
 
 	// 	// append marshalled bor transaction
 	// 	if err == nil && response != nil {
