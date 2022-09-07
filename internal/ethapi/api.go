@@ -1770,8 +1770,8 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 
 	toVar := reflect.ValueOf(data["transactions"])
 	for i := 0; i < toVar.Len(); i++ {
-		singleVertex := toVar.Index(i).Field() // What to do here?
-		fmt.Println(singleVertex)
+		singleVertex := toVar.Index(i) // What to do here?
+		fmt.Println(singleVertex.Field(0))
 	  }
 	// for _, tx := range data["transactions"].([]interface{}) {
 	// 	fmt.Println(tx)
