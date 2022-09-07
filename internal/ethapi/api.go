@@ -1800,7 +1800,7 @@ func (s *PublicTransactionPoolAPI) DoSimulate(ctx context.Context, args Transact
 
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs,args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  (hexutil.Bytes, hexutil.Bytes) {
+func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, args TransactionArgs,args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  (hexutil.Bytes, hexutil.Bytes) {
 	// pending, _ := s.b.TxPoolContent()
 	// var beta  *PublicBlockChainAPI
 	blockNbr,tt := pendingBlock.Number()
