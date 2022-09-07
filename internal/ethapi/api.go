@@ -1849,7 +1849,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		if idx == 0 {
 			evm, gasGp, header = DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 			msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
-		} if len(txa) == idx-1 {
+		}else if len(txs) == idx-1 {
 
 			results, _ := core.ApplyMessage(evm, msg1, gasGp)
 			fmt.Println(results)
