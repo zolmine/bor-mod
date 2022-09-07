@@ -1762,7 +1762,7 @@ func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, bloc
 
 	// Execute the message.
 	gp := new(core.GasPool).AddGas(math.MaxUint64)
-	result, _ := core.ApplyMessage(evmOfTransactionBlock, msg, gp)
+	_, _ = core.ApplyMessage(evmOfTransactionBlock, msg, gp)
 	// if err := vmError(); err != nil {
 	// 	fmt.Println(result)
 	// 	return nil, nil, nil
@@ -1803,7 +1803,7 @@ func (s *PublicTransactionPoolAPI) DoSimulate(ctx context.Context, args Transact
 func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, args TransactionArgs,args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  (hexutil.Bytes, hexutil.Bytes) {
 	// pending, _ := s.b.TxPoolContent()
 	// var beta  *PublicBlockChainAPI
-	blockNbr,tt := pendingBlock.Number()
+	blockNbr,_ := pendingBlock.Number()
 	// blockHash,_ := pendingBlock.Hash()
 	// fmt.Println(blockNbr,tt)
 	
