@@ -1783,7 +1783,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		from, _ := types.Sender(signer, tx)
 		data := tx.Data()
 		callArgs := TransactionArgs{
-			From:                 from,
+			From:                 &from,
 			To:                   tx.To(),
 			Value:                (*hexutil.Big)(tx.Value()),
 			Data:                 (*hexutil.Bytes)(&data),
