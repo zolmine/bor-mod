@@ -1853,8 +1853,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 
 			results, _ := core.ApplyMessage(evm, msg1, gasGp)
 			fmt.Println(results)
-		}
-		 else {
+		}else {
 
 			msg, _ := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
 			rs, _ := core.ApplyMessage(evm, msg, gasGp)
