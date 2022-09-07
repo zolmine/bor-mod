@@ -1767,7 +1767,7 @@ func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, bloc
 	// 	fmt.Println(result)
 	// 	return nil, nil, nil
 	// }
-	fmt.Println(result)
+	fmt.Println(result.Return())
 	return evmOfTransactionBlock, gp, header
 
 }
@@ -1858,10 +1858,9 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 				results, _ := core.ApplyMessage(evm, msg1, gasGp)
 				if len(results.Revert()) > 0 {
 					fmt.Println(newRevertError(results))
-
 				}
 				// fmt.Println(evm)
-				fmt.Println(results)
+				fmt.Println(results.Return())
 				}else {
 					fmt.Println("last")
 					msg, _ := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
