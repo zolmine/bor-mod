@@ -1776,9 +1776,9 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 	for i, tx := range txs {
 		if transactions[i], err = formatTx(tx); err != nil {
 			// return nil, err
-			fmt.Println(transactions[i])
+			fmt.Println(transactions[i].Hash())
 		}
-		fmt.Println(transactions[i])
+		fmt.Println(transactions[i].Hash())
 	}
 	
 	// result = append(data["transactions"])
