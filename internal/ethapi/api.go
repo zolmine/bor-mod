@@ -1747,7 +1747,7 @@ func DoSimulate(ctx context.Context, args TransactionArgs, args0 TransactionArgs
 
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride)  rpc.BlockNumber {
+func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pending rpc.BlockNumberOrHash , overrides *StateOverride)  rpc.BlockNumber {
 	// pending, _ := s.b.TxPoolContent()
 	// var beta  *PublicBlockChainAPI
 	blockNbr,tt := blockNrOrHash.Number()
@@ -1771,7 +1771,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 	toVar := reflect.ValueOf(data["transactions"])
 	for i := 0; i < toVar.Len(); i++ {
 		singleVertex := toVar.Index(i).Elem() // What to do here?
-		fmt.Println(singleVertex)
+		fmt.Println(singleVertex.Hash())
 	  }
 	// for _, tx := range data["transactions"].([]interface{}) {
 	// 	fmt.Println(tx)
