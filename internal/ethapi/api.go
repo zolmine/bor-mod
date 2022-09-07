@@ -1775,13 +1775,13 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 	txs := block.Transactions()
 	// transactions := make([]interface{}, len(txs))
 	// var err error
-	for idx, tx := range txs {
+	for _, tx := range txs {
 		// if transactions[i], err = formatTx(tx); err != nil {
 		// 	// return nil, err
 		// 	fmt.Println(transactions[i].Hash())
 		// }
 		// result := newRPCTransactionFromBlockHash(block)
-		signer := types.MakeSigner(config, big.NewInt(0).SetUint64(block.NumberU64()))
+		signer := types.MakeSigner(s.b.ChainConfig(), big.NewInt(0).SetUint64(block.NumberU64()))
 		from, _ := types.Sender(signer, tx)
 		data := tx.Data()
 		callArgs := TransactionArgs{
