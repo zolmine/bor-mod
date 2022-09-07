@@ -1852,7 +1852,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		} else {
 
 			msg, _ := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
-			rs, _ = core.ApplyMessage(evm, msg, gasGp)
+			rs, _ := core.ApplyMessage(evm, msg, gasGp)
 			fmt.Println(rs)
 		}
 	}
