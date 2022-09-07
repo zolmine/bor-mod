@@ -1719,6 +1719,57 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 	return resultAfter, nil
 }
 
+func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, timeout time.Duration, globalGasCap uint64) (*vm.EVM, *GasPool, *types.Header) {
+	defer func(start time.Time) { log.Debug("Executing EVM call finished", "runtime", time.Since(start)) }(time.Now())
+
+	state, header, err := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
+	
+	if state == nil || err != nil {
+		return nil, err, nil
+	}
+	if err := overrides.Apply(state); err != nil {
+		return nil, err, nil
+	}
+	// Setup context so it may be cancelled the call has completed
+	// or, in case of unmetered gas, setup a context with a timeout.
+	var cancel context.CancelFunc
+	if timeout > 0 {
+		ctx, cancel = context.WithTimeout(ctx, timeout)
+	} else {
+		ctx, cancel = context.WithCancel(ctx)
+	}
+	// Make sure the context is cancelled when the call has completed
+	// this makes sure resources are cleaned up.
+	defer cancel()
+
+	// Get a new instance of the EVM.
+	msg, err := args.ToMessage(globalGasCap, header.BaseFee)
+
+	
+
+	if err != nil || errAfter != nil {
+		return nil, err, nil
+	}
+	evmOfTransactionBlock, vmError, err := b.GetEVM(ctx, msg, state, header, &vm.Config{NoBaseFee: true})
+	if err != nil {
+		return nil, err, nil
+	}
+	
+	go func() {
+		<-ctx.Done()
+		evmOfTransactionBlock.Cancel()
+	}()
+
+	// Execute the message.
+	gp := new(core.GasPool).AddGas(math.MaxUint64)
+	result, err := core.ApplyMessage(evmOfTransactionBlock, msg, gp)
+	if err := vmError(); err != nil {
+		fmt.Println(result)
+		return nil, err, nil
+	}
+	return evmOfTransactionBlock, gp, header
+
+}
 
 func DoSimulate(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, s *PublicTransactionPoolAPI) (hexutil.Bytes, error) {
 	resultBefore, err := DoCallForTest(ctx, s.b, args, args0, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
@@ -1775,7 +1826,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 	txs := block.Transactions()
 	// transactions := make([]interface{}, len(txs))
 	// var err error
-	for _, tx := range txs {
+	for idx, tx := range txs {
 		// if transactions[i], err = formatTx(tx); err != nil {
 		// 	// return nil, err
 		// 	fmt.Println(transactions[i].Hash())
@@ -1790,9 +1841,15 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 			Value:                (*hexutil.Big)(tx.Value()),
 			Data:                 (*hexutil.Bytes)(&data),
 		}
-		fmt.Println(callArgs)
+		if idx == 0 {
+			evm, gasGp, header := DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
+		}
+		msg, err := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
+		_, _ = core.ApplyMessage(evmOfTransactionBlock, msg, gp)
 	}
-	
+	msg, err := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
+	results, _ = core.ApplyMessage(evmOfTransactionBlock, msg, gp)
+	fmt.Println(results)
 	// result = append(data["transactions"])
 
 	// fmt.Printf("the type of transcytions is: %T", data["transactions"] , "\n")
