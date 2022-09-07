@@ -1767,7 +1767,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		// append marshalled bor transaction
 	
 	data := s.appendRPCMarshalBorTransaction(ctx, block, response, true)
-	fmt.Println("the type of transcytions is: %T", data["transactions"] )
+	fmt.Printf("the type of transcytions is: %T", data["transactions"] , "\n")
 
 	// toVar := reflect.ValueOf(data["transactions"])
 	// for i := 0; i < toVar.Len(); i++ {
