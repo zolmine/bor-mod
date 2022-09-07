@@ -1849,7 +1849,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		if idx == 0 {
 			evm, gasGp, header = DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 			fmt.Println("first")
-			}else if len(txs) == idx-1 {
+			}else if len(txs) < idx {
 				fmt.Println("second")
 				
 				msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
@@ -1858,8 +1858,8 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 				}else {
 					fmt.Println("last")
 					msg, _ := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
-					rs, _ := core.ApplyMessage(evm, msg, gasGp)
-					fmt.Println(rs.Return())
+					rs, err := core.ApplyMessage(evm, msg, gasGp)
+					fmt.Println(rs.Return(),err)
 		}
 	}
 	// result = append(data["transactions"])
