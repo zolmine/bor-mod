@@ -1807,6 +1807,10 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 	// blockHash,_ := pendingBlock.Hash()
 	// fmt.Println(blockNbr,tt)
 	
+	type rs struct {
+		r1 hexutil.Bytes
+		r2 hexutil.Bytes
+	}
 	
 	block, _ := s.b.BlockByNumber(ctx, blockNbr)
 	// if block != nil && err == nil {
@@ -1833,7 +1837,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		header *types.Header
 		results1 *core.ExecutionResult
 		results2 *core.ExecutionResult
-		fields  map[string]interface{}
+		fields  rs
 		
 	)
 	for idx, tx := range txs {
@@ -1864,10 +1868,9 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 				results2, _ = core.ApplyMessage(evm, msg2, gasGp)
 				
 				// fmt.Println(evm)
-				fields = map[string]interface{}{
-					"first":         results1.Return(),
-					"last":       results2.Return(),
-				}
+				fields.r1 = results1.Return() 
+				fields.r2 = results2.Return() 
+				
 				return fields
 				}else {
 					// fmt.Println("last")
