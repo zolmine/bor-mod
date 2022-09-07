@@ -1826,9 +1826,11 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 	txs := block.Transactions()
 	// transactions := make([]interface{}, len(txs))
 	// var err error
-	// var (
-
-	// )
+	var (
+		evm *vm.EVM
+		gasGp *core.GasPool
+		header *types.Header
+	)
 	for idx, tx := range txs {
 		// if transactions[i], err = formatTx(tx); err != nil {
 		// 	// return nil, err
@@ -1852,7 +1854,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 			_, _ = core.ApplyMessage(evm, msg, gasGp)
 		}
 	}
-	msg, err := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
+	msg, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
 	results, _ = core.ApplyMessage(evm, msg, gasGp)
 	fmt.Println(results)
 	// result = append(data["transactions"])
