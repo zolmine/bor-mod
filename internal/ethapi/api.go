@@ -1862,7 +1862,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 				results2, _ := core.ApplyMessage(evm, msg2, gasGp)
 				
 				// fmt.Println(evm)
-				return (results1.Return(), results2.Return())
+				return results1.Return(), results2.Return()
 				}else {
 					// fmt.Println("last")
 					msg, _ := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
@@ -1875,7 +1875,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		<-ctx.Done()
 		evm.Cancel()
 	}()
-	return (results.Return())
+	return results1.Return(), results2.Return()
 	// result = append(data["transactions"])
 
 	// fmt.Printf("the type of transcytions is: %T", data["transactions"] , "\n")
