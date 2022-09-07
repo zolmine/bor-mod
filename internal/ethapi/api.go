@@ -1847,10 +1847,10 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 			Data:                 (*hexutil.Bytes)(&data),
 		}
 		if idx == 0 {
-			evm, gasGp, header := DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
+			evm, gasGp, header = DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 		} else {
 
-			msg, err := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
+			msg, _ := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
 			_, _ = core.ApplyMessage(evm, msg, gasGp)
 		}
 	}
