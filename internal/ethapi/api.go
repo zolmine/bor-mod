@@ -1767,9 +1767,9 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		// append marshalled bor transaction
 	
 	// data := s.appendRPCMarshalBorTransaction(ctx, block, response, true)
-	formatTx := func(tx *types.Transaction) *RPCTransaction {
-		return newRPCTransactionFromBlockHash(block, tx.Hash(), s.b.ChainConfig())
-	}
+	// formatTx := func(tx *types.Transaction) *RPCTransaction {
+	// 	return newRPCTransactionFromBlockHash(block, tx.Hash(), s.b.ChainConfig())
+	// }
 	txs := block.Transactions()
 	// transactions := make([]interface{}, len(txs))
 	// var err error
@@ -1778,8 +1778,8 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		// 	// return nil, err
 		// 	fmt.Println(transactions[i].Hash())
 		// }
-		txx := formatTx(tx)
-		fmt.Println(txx.Hash())
+		// txx := formatTx(tx)
+		fmt.Println(tx.Hash())
 	}
 	
 	// result = append(data["transactions"])
