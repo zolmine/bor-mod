@@ -1449,6 +1449,7 @@ func newRPCTransactionFromBlockIndex(b *types.Block, index uint64, config *param
 	return newRPCTransaction(txs[index], b.Hash(), b.NumberU64(), index, b.BaseFee(), config)
 }
 
+
 // newRPCRawTransactionFromBlockIndex returns the bytes of a transaction given a block and a transaction index.
 func newRPCRawTransactionFromBlockIndex(b *types.Block, index uint64) hexutil.Bytes {
 	txs := b.Transactions()
@@ -1774,12 +1775,13 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 	txs := block.Transactions()
 	// transactions := make([]interface{}, len(txs))
 	// var err error
-	for _, tx := range txs {
+	for idx, tx := range txs {
 		// if transactions[i], err = formatTx(tx); err != nil {
 		// 	// return nil, err
 		// 	fmt.Println(transactions[i].Hash())
 		// }
-		signer := types.MakeSigner(s.b.ChainConfig(), big.NewInt(0).SetInt64(blockNbr.Int64()))
+		// result := newRPCTransactionFromBlockHash(block)
+		signer := types.MakeSigner(config, big.NewInt(0).SetUint64(block.NumberU64()))
 		from, _ := types.Sender(signer, tx)
 		data := tx.Data()
 		callArgs := TransactionArgs{
