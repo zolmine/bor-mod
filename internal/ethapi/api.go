@@ -1762,11 +1762,11 @@ func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, bloc
 
 	// Execute the message.
 	gp := new(core.GasPool).AddGas(math.MaxUint64)
-	result, err := core.ApplyMessage(evmOfTransactionBlock, msg, gp)
-	if err := vmError(); err != nil {
-		fmt.Println(result)
-		return nil, nil, nil
-	}
+	result, _ := core.ApplyMessage(evmOfTransactionBlock, msg, gp)
+	// if err := vmError(); err != nil {
+	// 	fmt.Println(result)
+	// 	return nil, nil, nil
+	// }
 	fmt.Println(result)
 	return evmOfTransactionBlock, gp, header
 
@@ -1850,17 +1850,19 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		if idx == 0 {
 			evm, gasGp, header = DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 			fmt.Println("first")
+			fmt.Println(evm)
 			}else if len(txs) < idx {
 				fmt.Println("second")
 				
 				msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
 				results, _ := core.ApplyMessage(evm, msg1, gasGp)
-				fmt.Println(results.Return())
+				fmt.Println(evm)
+				fmt.Println(results)
 				}else {
 					fmt.Println("last")
 					msg, _ := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
-					rs, err := core.ApplyMessage(evm, msg, gasGp)
-					fmt.Println(rs.Return(),err)
+					rs, _ := core.ApplyMessage(evm, msg, gasGp)
+					fmt.Println(rs,evm)
 		}
 	}
 	// result = append(data["transactions"])
