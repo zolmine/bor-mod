@@ -1767,6 +1767,7 @@ func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, bloc
 		fmt.Println(result)
 		return nil, nil, nil
 	}
+	fmt.Println(result)
 	return evmOfTransactionBlock, gp, header
 
 }
