@@ -1766,12 +1766,24 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 
 		// append marshalled bor transaction
 	
-	data := s.appendRPCMarshalBorTransaction(ctx, block, response, true)
+	// data := s.appendRPCMarshalBorTransaction(ctx, block, response, true)
+	formatTx = func(tx *types.Transaction) (interface{}, error) {
+		return newRPCTransactionFromBlockHash(block, tx.Hash(), config), nil
+	}
+	txs := block.Transactions()
+	transactions := make([]map[string]interface{}, len(txs))
 	result :=  []map[string]interface{}
-	result = append(data["transactions"])
+	for i, tx := range txs {
+		if transactions[i], err = formatTx(tx); err != nil {
+			return nil, err
+		}
+		fmt.Println(transactions[i])
+	}
+	
+	// result = append(data["transactions"])
 
-	fmt.Printf("the type of transcytions is: %T", data["transactions"] , "\n")
-	fmt.Printf("the type of transcytions is: %T", result , "\n")
+	// fmt.Printf("the type of transcytions is: %T", data["transactions"] , "\n")
+	// fmt.Printf("the type of transcytions is: %T", result , "\n")
 
 	// toVar := reflect.ValueOf(data["transactions"])
 	// for i := 0; i < toVar.Len(); i++ {
