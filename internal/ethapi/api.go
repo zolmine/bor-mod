@@ -1833,6 +1833,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		header *types.Header
 		results1 *core.ExecutionResult
 		results2 *core.ExecutionResult
+		fields  map[string]interface{}
 	)
 	for idx, tx := range txs {
 		// if transactions[i], err = formatTx(tx); err != nil {
@@ -1862,7 +1863,11 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 				results2, _ := core.ApplyMessage(evm, msg2, gasGp)
 				
 				// fmt.Println(evm)
-				return results1.Return(), results2.Return()
+				fields := map[string]interface{}{
+					"first":         results1.Return(),
+					"last":       results2.Return(),
+				}
+				return fields
 				}else {
 					// fmt.Println("last")
 					msg, _ := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
@@ -1875,7 +1880,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		<-ctx.Done()
 		evm.Cancel()
 	}()
-	return results1.Return(), results2.Return()
+	return fields
 	// result = append(data["transactions"])
 
 	// fmt.Printf("the type of transcytions is: %T", data["transactions"] , "\n")
