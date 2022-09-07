@@ -1799,12 +1799,12 @@ func (s *PublicTransactionPoolAPI) DoSimulate(ctx context.Context, args Transact
 
 
 
-type rs struct {
-	r1 hexutil.Bytes
-	r2 hexutil.Bytes
-}
+// type rs struct {
+// 	r1 hexutil.Bytes
+// 	r2 hexutil.Bytes
+// }
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  rs {
+func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  hexutil.Bytes {
 	// pending, _ := s.b.TxPoolContent()
 	// var beta  *PublicBlockChainAPI
 	blockNbr,_ := pendingBlock.Number()
@@ -1835,9 +1835,9 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		evm *vm.EVM
 		gasGp *core.GasPool
 		header *types.Header
-		results1 *core.ExecutionResult
-		results2 *core.ExecutionResult
-		fields  rs
+		results *core.ExecutionResult
+		// results2 *core.ExecutionResult
+		// fields  rs
 		
 	)
 	for idx, tx := range txs {
@@ -1863,15 +1863,11 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 				// fmt.Println("second")
 				
 				msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
-				results1, _ = core.ApplyMessage(evm, msg1, gasGp)
-				msg2, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
-				results2, _ = core.ApplyMessage(evm, msg2, gasGp)
+				results, _ = core.ApplyMessage(evm, msg1, gasGp)
 				
-				// fmt.Println(evm)
-				fields.r1 = results1.Return() 
-				fields.r2 = results2.Return() 
+				 
 				
-				return fields
+				return results.Return()
 				}else {
 					// fmt.Println("last")
 					msg, _ := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
@@ -1889,7 +1885,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 	// 	"first":         results1.Return(),
 	// 	"last":       results2.Return(),
 	// }
-	return fields
+	return results.Return()
 	// result = append(data["transactions"])
 
 	// fmt.Printf("the type of transcytions is: %T", data["transactions"] , "\n")
