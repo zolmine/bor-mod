@@ -1775,7 +1775,8 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 	var err error
 	for i, tx := range txs {
 		if transactions[i], err = formatTx(tx); err != nil {
-			return nil, err
+			// return nil, err
+			fmt.Println(transactions[i])
 		}
 		fmt.Println(transactions[i])
 	}
