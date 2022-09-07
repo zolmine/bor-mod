@@ -1799,18 +1799,18 @@ func (s *PublicTransactionPoolAPI) DoSimulate(ctx context.Context, args Transact
 
 
 
+type rs struct {
+	r1 hexutil.Bytes
+	r2 hexutil.Bytes
+}
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  (map[string]interface{}) {
+func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  rs {
 	// pending, _ := s.b.TxPoolContent()
 	// var beta  *PublicBlockChainAPI
 	blockNbr,_ := pendingBlock.Number()
 	// blockHash,_ := pendingBlock.Hash()
 	// fmt.Println(blockNbr,tt)
 	
-	type rs struct {
-		r1 hexutil.Bytes
-		r2 hexutil.Bytes
-	}
 	
 	block, _ := s.b.BlockByNumber(ctx, blockNbr)
 	// if block != nil && err == nil {
