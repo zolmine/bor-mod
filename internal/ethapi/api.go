@@ -1831,6 +1831,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		evm *vm.EVM
 		gasGp *core.GasPool
 		header *types.Header
+		results *core.ExecutionResult
 	)
 	for idx, tx := range txs {
 		// if transactions[i], err = formatTx(tx); err != nil {
@@ -1868,6 +1869,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 					// fmt.Println(rs,evm)
 		}
 	}
+	return (results.Return())
 	// result = append(data["transactions"])
 
 	// fmt.Printf("the type of transcytions is: %T", data["transactions"] , "\n")
