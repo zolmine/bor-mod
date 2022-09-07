@@ -1855,7 +1855,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		}
 	}
 	msg, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
-	results, _ = core.ApplyMessage(evm, msg, gasGp)
+	results, _ := core.ApplyMessage(evm, msg, gasGp)
 	fmt.Println(results)
 	// result = append(data["transactions"])
 
