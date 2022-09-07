@@ -1779,7 +1779,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		// 	fmt.Println(transactions[i].Hash())
 		// }
 		// txx := formatTx(tx)
-		fmt.Println(tx.Hash())
+		fmt.Println(tx.From() , tx.Value() , tx.To())
 	}
 	
 	// result = append(data["transactions"])
