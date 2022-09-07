@@ -1751,7 +1751,7 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 	// pending, _ := s.b.TxPoolContent()
 	// var beta  *PublicBlockChainAPI
 	blockNbr,tt := pendingBlock.Number()
-	blockHash,_ := pendingBlock.Hash()
+	// blockHash,_ := pendingBlock.Hash()
 	fmt.Println(blockNbr,tt)
 	
 	
@@ -1779,11 +1779,11 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		// 	// return nil, err
 		// 	fmt.Println(transactions[i].Hash())
 		// }
-		signer := types.MakeSigner(s.b.ChainConfig(), big.NewInt(0).SetUint64(blockNumber))
+		signer := types.MakeSigner(s.b.ChainConfig(), big.NewInt(0).SetUint64(blockNbr))
 		from, _ := types.Sender(signer, tx)
-		data := tx.data()
+		data := tx.Data()
 		callArgs := TransactionArgs{
-			From:                 from,
+			From:                 *from,
 			To:                   tx.To(),
 			Value:                (*hexutil.Big)(tx.Value()),
 			Data:                 (*hexutil.Bytes)(&data),
