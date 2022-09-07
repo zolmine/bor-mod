@@ -1767,7 +1767,7 @@ func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, bloc
 	// 	fmt.Println(result)
 	// 	return nil, nil, nil
 	// }
-	fmt.Println(result.Return())
+	// fmt.Println(result.Return())
 	return evmOfTransactionBlock, gp, header
 
 }
@@ -1800,12 +1800,12 @@ func (s *PublicTransactionPoolAPI) DoSimulate(ctx context.Context, args Transact
 
 
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  hexutil.Bytes {
+func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args TransactionArgs,args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  (hexutil.Bytes, hexutil.Bytes) {
 	// pending, _ := s.b.TxPoolContent()
 	// var beta  *PublicBlockChainAPI
 	blockNbr,tt := pendingBlock.Number()
 	// blockHash,_ := pendingBlock.Hash()
-	fmt.Println(blockNbr,tt)
+	// fmt.Println(blockNbr,tt)
 	
 	
 	block, _ := s.b.BlockByNumber(ctx, blockNbr)
@@ -1831,7 +1831,8 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		evm *vm.EVM
 		gasGp *core.GasPool
 		header *types.Header
-		results *core.ExecutionResult
+		results1 *core.ExecutionResult
+		results2 *core.ExecutionResult
 	)
 	for idx, tx := range txs {
 		// if transactions[i], err = formatTx(tx); err != nil {
@@ -1856,12 +1857,12 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 				// fmt.Println("second")
 				
 				msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
-				results, _ := core.ApplyMessage(evm, msg1, gasGp)
-				if len(results.Revert()) > 0 {
-					fmt.Println(newRevertError(results))
-				}
+				results1, _ := core.ApplyMessage(evm, msg1, gasGp)
+				msg2, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
+				results2, _ := core.ApplyMessage(evm, msg2, gasGp)
+				
 				// fmt.Println(evm)
-				return (results.Return())
+				return (results1.Return(), results2.Return())
 				}else {
 					// fmt.Println("last")
 					msg, _ := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
