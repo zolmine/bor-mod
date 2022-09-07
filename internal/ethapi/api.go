@@ -1725,10 +1725,10 @@ func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, bloc
 	state, header, err := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
 	
 	if state == nil || err != nil {
-		return nil, err, nil
+		return nil, nil, nil
 	}
 	if err := overrides.Apply(state); err != nil {
-		return nil, err, nil
+		return nil, nil, nil
 	}
 	// Setup context so it may be cancelled the call has completed
 	// or, in case of unmetered gas, setup a context with a timeout.
@@ -1748,11 +1748,11 @@ func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, bloc
 	
 
 	if err != nil {
-		return nil, err, nil
+		return nil, nil, nil
 	}
 	evmOfTransactionBlock, vmError, err := b.GetEVM(ctx, msg, state, header, &vm.Config{NoBaseFee: true})
 	if err != nil {
-		return nil, err, nil
+		return nil, nil, nil
 	}
 	
 	go func() {
@@ -1765,7 +1765,7 @@ func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, bloc
 	result, err := core.ApplyMessage(evmOfTransactionBlock, msg, gp)
 	if err := vmError(); err != nil {
 		fmt.Println(result)
-		return nil, err, nil
+		return nil, nil, nil
 	}
 	return evmOfTransactionBlock, gp, header
 
