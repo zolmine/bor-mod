@@ -1771,9 +1771,9 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		return newRPCTransactionFromBlockHash(block, tx.Hash(), s.b.ChainConfig())
 	}
 	txs := block.Transactions()
-	transactions := make([]interface{}, len(txs))
-	var err error
-	for i, tx := range txs {
+	// transactions := make([]interface{}, len(txs))
+	// var err error
+	for _, tx := range txs {
 		// if transactions[i], err = formatTx(tx); err != nil {
 		// 	// return nil, err
 		// 	fmt.Println(transactions[i].Hash())
