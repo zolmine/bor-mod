@@ -1864,7 +1864,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 				results2, _ := core.ApplyMessage(evm, msg2, gasGp)
 				
 				// fmt.Println(evm)
-				fields := map[string]interface{}{
+				fields = map[string]interface{}{
 					"first":         results1.Return(),
 					"last":       results2.Return(),
 				}
@@ -1882,7 +1882,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		evm.Cancel()
 	}()
 
-	fields := map[string]interface{}{
+	fields = map[string]interface{}{
 		"first":         results1.Return(),
 		"last":       results2.Return(),
 	}
