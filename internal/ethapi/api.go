@@ -1859,9 +1859,9 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 				// fmt.Println("second")
 				
 				msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
-				results1, _ := core.ApplyMessage(evm, msg1, gasGp)
+				results1, _ = core.ApplyMessage(evm, msg1, gasGp)
 				msg2, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
-				results2, _ := core.ApplyMessage(evm, msg2, gasGp)
+				results2, _ = core.ApplyMessage(evm, msg2, gasGp)
 				
 				// fmt.Println(evm)
 				fields = map[string]interface{}{
@@ -1882,10 +1882,10 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		evm.Cancel()
 	}()
 
-	fields = map[string]interface{}{
-		"first":         results1.Return(),
-		"last":       results2.Return(),
-	}
+	// fields = map[string]interface{}{
+	// 	"first":         results1.Return(),
+	// 	"last":       results2.Return(),
+	// }
 	return fields
 	// result = append(data["transactions"])
 
