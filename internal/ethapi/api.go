@@ -1767,11 +1767,11 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		// append marshalled bor transaction
 	
 	// data := s.appendRPCMarshalBorTransaction(ctx, block, response, true)
-	formatTx := func(tx *types.Transaction) ([]map[string]interface{}, error) {
+	formatTx := func(tx *types.Transaction) (interface{}, error) {
 		return newRPCTransactionFromBlockHash(block, tx.Hash(), s.b.ChainConfig()), nil
 	}
 	txs := block.Transactions()
-	transactions := make([]map[string]interface{}, len(txs))
+	transactions := make([]interface{}, len(txs))
 	var err error
 	for i, tx := range txs {
 		if transactions[i], err = formatTx(tx); err != nil {
