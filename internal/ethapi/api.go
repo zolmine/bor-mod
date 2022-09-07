@@ -1880,10 +1880,10 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		}
 	}
 
-	go func() {
-		<-ctx.Done()
-		evm.Cancel()
-	}()
+	// go func() {
+	// 	<-ctx.Done()
+	// 	evm.Cancel()
+	// }()
 
 	// fields = map[string]interface{}{
 	// 	"first":         results1.Return(),
