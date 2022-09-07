@@ -1750,10 +1750,10 @@ func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, bloc
 	if err != nil {
 		return nil, nil, nil
 	}
-	evmOfTransactionBlock, vmError, err := b.GetEVM(ctx, msg, state, header, &vm.Config{NoBaseFee: true})
-	if err != nil {
-		return nil, nil, nil
-	}
+	evmOfTransactionBlock, _, _ := b.GetEVM(ctx, msg, state, header, &vm.Config{NoBaseFee: true})
+	// if err != nil {
+	// 	return nil, nil, nil
+	// }
 	
 	go func() {
 		<-ctx.Done()
