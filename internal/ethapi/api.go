@@ -1719,7 +1719,7 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 	return resultAfter, nil
 }
 
-func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, timeout time.Duration, globalGasCap uint64) (*vm.EVM, *GasPool, *types.Header) {
+func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, timeout time.Duration, globalGasCap uint64) (*vm.EVM, *ExecutionResult, *types.Header) {
 	defer func(start time.Time) { log.Debug("Executing EVM call finished", "runtime", time.Since(start)) }(time.Now())
 
 	state, header, err := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
@@ -1747,7 +1747,7 @@ func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, bloc
 
 	
 
-	if err != nil || errAfter != nil {
+	if err != nil {
 		return nil, err, nil
 	}
 	evmOfTransactionBlock, vmError, err := b.GetEVM(ctx, msg, state, header, &vm.Config{NoBaseFee: true})
@@ -1843,9 +1843,11 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		}
 		if idx == 0 {
 			evm, gasGp, header := DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
+		} else {
+
+			msg, err := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
+			_, _ = core.ApplyMessage(evmOfTransactionBlock, msg, gp)
 		}
-		msg, err := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
-		_, _ = core.ApplyMessage(evmOfTransactionBlock, msg, gp)
 	}
 	msg, err := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
 	results, _ = core.ApplyMessage(evmOfTransactionBlock, msg, gp)
