@@ -1850,10 +1850,10 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		}
 		if idx == 0 {
 			evm, gasGp, header = DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
-			fmt.Println("first")
-			fmt.Println(evm)
+			// fmt.Println("first")
+			// fmt.Println(evm)
 			}else if (len(txs) - 1) == idx {
-				fmt.Println("second")
+				// fmt.Println("second")
 				
 				msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
 				results, _ := core.ApplyMessage(evm, msg1, gasGp)
@@ -1863,12 +1863,17 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 				// fmt.Println(evm)
 				return (results.Return())
 				}else {
-					fmt.Println("last")
+					// fmt.Println("last")
 					msg, _ := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
 					_, _ = core.ApplyMessage(evm, msg, gasGp)
 					// fmt.Println(rs,evm)
 		}
 	}
+
+	go func() {
+		<-ctx.Done()
+		evm.Cancel()
+	}()
 	return (results.Return())
 	// result = append(data["transactions"])
 
