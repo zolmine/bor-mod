@@ -1779,11 +1779,11 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		// 	// return nil, err
 		// 	fmt.Println(transactions[i].Hash())
 		// }
-		signer := types.MakeSigner(s.b.ChainConfig(), big.NewInt(0).SetUint64(blockNbr))
+		signer := types.MakeSigner(s.b.ChainConfig(), big.NewInt(0).SetUint64(blockNbr.Int64()))
 		from, _ := types.Sender(signer, tx)
 		data := tx.Data()
 		callArgs := TransactionArgs{
-			From:                 *from,
+			From:                 from,
 			To:                   tx.To(),
 			Value:                (*hexutil.Big)(tx.Value()),
 			Data:                 (*hexutil.Bytes)(&data),
