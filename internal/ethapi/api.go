@@ -1849,15 +1849,18 @@ func (s *PublicBlockChainAPI) GetTransactionByHash01(ctx context.Context, args T
 		if idx == 0 {
 			evm, gasGp, header = DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 			msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
-		} else {
+		} if len(txa) == idx-1 {
+
+			results, _ := core.ApplyMessage(evm, msg1, gasGp)
+			fmt.Println(results)
+		}
+		 else {
 
 			msg, _ := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
 			rs, _ := core.ApplyMessage(evm, msg, gasGp)
 			fmt.Println(rs)
 		}
 	}
-	results, _ := core.ApplyMessage(evm, msg1, gasGp)
-	fmt.Println(results)
 	// result = append(data["transactions"])
 
 	// fmt.Printf("the type of transcytions is: %T", data["transactions"] , "\n")
