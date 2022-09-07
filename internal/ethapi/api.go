@@ -1834,6 +1834,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		results1 *core.ExecutionResult
 		results2 *core.ExecutionResult
 		fields  map[string]interface{}
+		
 	)
 	for idx, tx := range txs {
 		// if transactions[i], err = formatTx(tx); err != nil {
@@ -1880,6 +1881,11 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		<-ctx.Done()
 		evm.Cancel()
 	}()
+
+	fields := map[string]interface{}{
+		"first":         results1.Return(),
+		"last":       results2.Return(),
+	}
 	return fields
 	// result = append(data["transactions"])
 
