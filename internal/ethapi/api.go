@@ -1787,7 +1787,7 @@ func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, bloc
 func (s *PublicTransactionPoolAPI) DoSimulate(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) (hexutil.Bytes, error) {
 	resultBefore, err := DoCallForTest(ctx, s.b, args, args0, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 	if err != nil {
-		fmt.Println(err)
+		// fmt.Println(err)
 		return nil, err
 	}
 	// If the result contains a revert reason, try to unpack and return it.
@@ -1865,7 +1865,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 				msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
 				results, err := core.ApplyMessage(evm, msg1, gasGp)
 				if err != nil {
-					fmt.Println(err)
+					// fmt.Println(err)
 					return nil, err
 				}
 						// If the result contains a revert reason, try to unpack and return it.
