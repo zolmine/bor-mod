@@ -1863,7 +1863,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 				// fmt.Println("second")
 				
 				msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
-				results, err = core.ApplyMessage(evm, msg1, gasGp)
+				results, err := core.ApplyMessage(evm, msg1, gasGp)
 				if err != nil {
 					fmt.Println(err)
 					return nil, err
