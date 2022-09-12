@@ -2051,7 +2051,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 	
 }
 
-func tree01(tx *types.Transaction, ctx context.Context, s *PublicTransactionPoolAPI, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) int {
+func tree01(tx *types.Transaction, ctx context.Context, s Backend, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) int {
 	
 	if len(tx.Data()) > 11 {
 		input := hexutil.Bytes(tx.Data())
