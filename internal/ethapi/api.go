@@ -1787,7 +1787,7 @@ func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, bloc
 func (s *PublicTransactionPoolAPI) DoSimulate(ctx context.Context, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) (hexutil.Bytes, error) {
 	resultBefore, err := DoCallForTest(ctx, s.b, args, args0, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 	if err != nil {
-		// fmt.Println(err)
+		fmt.Println(err)
 		return nil, err
 	}
 	// If the result contains a revert reason, try to unpack and return it.
@@ -1865,7 +1865,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 				msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
 				results, err := core.ApplyMessage(evm, msg1, gasGp)
 				if err != nil {
-					// fmt.Println(err)
+					fmt.Println(err)
 					return nil, err
 				}
 						// If the result contains a revert reason, try to unpack and return it.
@@ -2026,7 +2026,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 	txs := block.Transactions()
 
 	for _, tx := range txs {
-
+		typeTx := tx.Type()
 		signer := types.MakeSigner(s.b.ChainConfig(), big.NewInt(0).SetUint64(block.NumberU64()))
 		from, _ := types.Sender(signer, tx)
 		data := tx.Data()
@@ -2059,7 +2059,7 @@ func tree01(tx *types.Transaction, ctx context.Context, s Backend, args Transact
 	if len(tx.Data()) > 11 {
 		input := hexutil.Bytes(tx.Data())
 		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4  || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3  || string(input[0:4]) != inp6  || string(input[0:4]) != inp7  || string(input[0:4]) != inp8  || string(input[0:4]) != inp9  || string(input[0:4]) != inp10  || string(input[0:4]) != inp11  || string(input[0:4]) != inp12  || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || *tx.To() != add4 || *tx.To() != add5 || *tx.To() != add6 || *tx.To() != add7 || *tx.To() != add8 || *tx.To() != add9 || *tx.To() != add10 || *tx.To() != add11 || *tx.To() != add12 || *tx.To() != add13 || *tx.To() != add14 {
-			result, err := DoCallForTest(ctx, s, args, args0, blockNrOrHash, overrides, s.RPCEVMTimeout(), s.RPCGasCap())
+			results, err := DoCallForTest(ctx, s, args, args0, blockNrOrHash, overrides, s.RPCEVMTimeout(), s.RPCGasCap())
 			// }
 			if err != nil {
 				return 0
