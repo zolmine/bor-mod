@@ -2005,41 +2005,41 @@ func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 
 
 
-func tree(tx *types.Transaction,ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, increaser int,s *PublicTransactionPoolAPI) (*big.Int, int) {
-	currentGas := big.NewInt(0)
-	fmt.Print(currentGas)
-	if len(tx.Data()) > 11 {
-		input := hexutil.Bytes(tx.Data())
-		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4  || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3  || string(input[0:4]) != inp6  || string(input[0:4]) != inp7  || string(input[0:4]) != inp8  || string(input[0:4]) != inp9  || string(input[0:4]) != inp10  || string(input[0:4]) != inp11  || string(input[0:4]) != inp12  || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || *tx.To() != add4 || *tx.To() != add5 || *tx.To() != add6 || *tx.To() != add7 || *tx.To() != add8 || *tx.To() != add9 || *tx.To() != add10 || *tx.To() != add11 || *tx.To() != add12 || *tx.To() != add13 || *tx.To() != add14 {
-			// typeTx := tx.Type()
-			increaser = increaser + 1
-			// data := args.data()
-			// args0 := TransactionArgs{
-			// 	From:                 tx.From(),
-			// 	To:                   tx.To(),
-			// 	GasPrice:             tx.GasPrice(),
-			// 	MaxFeePerGas:         tx.MaxFeePerGas(),
-			// 	MaxPriorityFeePerGas: tx.MaxPriorityFeePerGas(),
-			// 	Value:                tx.Value(),
-			// 	Data:                 (*hexutil.Bytes)(&data),
-			// 	AccessList:           tx.AccessList(),
-			// }
-			// result, err := DoSimulate(ctx, args, args0, blockNrOrHas, overrides,s)
-			// fmt.Println(result,err)
-			// if typeTx == 2 {
-			// 	return tx.GasTipCap(), increaser
-			// } else {
-			// 	return tx.GasPrice(), increaser
-			// }
-			return tx.GasPrice(), increaser
+// func tree(tx *types.Transaction,ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, increaser int,s *PublicTransactionPoolAPI) (*big.Int, int) {
+// 	currentGas := big.NewInt(0)
+// 	fmt.Print(currentGas)
+// 	if len(tx.Data()) > 11 {
+// 		input := hexutil.Bytes(tx.Data())
+// 		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4  || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3  || string(input[0:4]) != inp6  || string(input[0:4]) != inp7  || string(input[0:4]) != inp8  || string(input[0:4]) != inp9  || string(input[0:4]) != inp10  || string(input[0:4]) != inp11  || string(input[0:4]) != inp12  || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || *tx.To() != add4 || *tx.To() != add5 || *tx.To() != add6 || *tx.To() != add7 || *tx.To() != add8 || *tx.To() != add9 || *tx.To() != add10 || *tx.To() != add11 || *tx.To() != add12 || *tx.To() != add13 || *tx.To() != add14 {
+// 			// typeTx := tx.Type()
+// 			increaser = increaser + 1
+// 			// data := args.data()
+// 			// args0 := TransactionArgs{
+// 			// 	From:                 tx.From(),
+// 			// 	To:                   tx.To(),
+// 			// 	GasPrice:             tx.GasPrice(),
+// 			// 	MaxFeePerGas:         tx.MaxFeePerGas(),
+// 			// 	MaxPriorityFeePerGas: tx.MaxPriorityFeePerGas(),
+// 			// 	Value:                tx.Value(),
+// 			// 	Data:                 (*hexutil.Bytes)(&data),
+// 			// 	AccessList:           tx.AccessList(),
+// 			// }
+// 			// result, err := DoSimulate(ctx, args, args0, blockNrOrHas, overrides,s)
+// 			// fmt.Println(result,err)
+// 			// if typeTx == 2 {
+// 			// 	return tx.GasTipCap(), increaser
+// 			// } else {
+// 			// 	return tx.GasPrice(), increaser
+// 			// }
+// 			return tx.GasPrice(), increaser
 
-		} else {
-			return currentGas, increaser
-		}
-	} else {
-		return currentGas, increaser
-	}
-}
+// 		} else {
+// 			return currentGas, increaser
+// 		}
+// 	} else {
+// 		return currentGas, increaser
+// 	}
+// }
 
 func decodeAddress(s string) (common.Address, error) {
 	b, err := hexutil.Decode(s)
