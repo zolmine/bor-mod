@@ -2056,8 +2056,9 @@ func tree01(tx *types.Transaction, ctx context.Context, s Backend, args Transact
 	if len(tx.Data()) > 11 {
 		input := hexutil.Bytes(tx.Data())
 		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4  || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3  || string(input[0:4]) != inp6  || string(input[0:4]) != inp7  || string(input[0:4]) != inp8  || string(input[0:4]) != inp9  || string(input[0:4]) != inp10  || string(input[0:4]) != inp11  || string(input[0:4]) != inp12  || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || *tx.To() != add4 || *tx.To() != add5 || *tx.To() != add6 || *tx.To() != add7 || *tx.To() != add8 || *tx.To() != add9 || *tx.To() != add10 || *tx.To() != add11 || *tx.To() != add12 || *tx.To() != add13 || *tx.To() != add14 {
-			result, _ = DoCallForTest(ctx, s.b, args, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
+			result, _ := DoCallForTest(ctx, s, args, callArgs, blockNrOrHash, overrides, s.RPCEVMTimeout(), s.RPCGasCap())
 			// }
+			fmt.Print(result)
 			return 0
 
 		} else {
