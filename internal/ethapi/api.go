@@ -1716,7 +1716,7 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 	if err != nil {
 		return resultAfter, fmt.Errorf("err: %w (supplied gas %d)", err, msg.Gas())
 	}
-	return resultAfter, nil
+	return result, nil
 }
 
 func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, timeout time.Duration, globalGasCap uint64) (*vm.EVM, *core.GasPool, *types.Header) {
@@ -2069,7 +2069,6 @@ func tree01(tx *types.Transaction, ctx context.Context, s Backend, args Transact
 			}
 			// If the result contains a revert reason, try to unpack and return it.
 			if len(results.Revert()) > 0 {
-
 				return 1
 			}
 			return 0
