@@ -2025,7 +2025,8 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 
 	txs := block.Transactions()
 
-	for _, tx := range txs {
+	for idx, tx := range txs {
+		fmt.Println(idx)
 		typeTx := tx.Type()
 		signer := types.MakeSigner(s.b.ChainConfig(), big.NewInt(0).SetUint64(block.NumberU64()))
 		from, _ := types.Sender(signer, tx)
@@ -2040,8 +2041,10 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 		results := tree01(tx, ctx, s.b, args, callArgs, blockNrOrHash, overrides)
 		if results == 1 {
 			if typeTx == 2 {
+				fmt.Println(tx.GasPrice())
 				return tx.GasFeeCap()
-			}else {
+				}else {
+					fmt.Println(tx.GasFeeCap())
 					return tx.GasPrice()
 			}
 		}
