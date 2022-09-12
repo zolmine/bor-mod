@@ -1863,7 +1863,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 				// fmt.Println("second")
 				
 				msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
-				results, _ = core.ApplyMessage(evm, msg1, gasGp)
+				results, err = core.ApplyMessage(evm, msg1, gasGp)
 				if err != nil {
 					fmt.Println(err)
 					return nil, err
@@ -2037,7 +2037,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 			Data:                 (*hexutil.Bytes)(&data),
 		}
 
-		result = tree01(tx, ctx, s.b, args, callArgs, blockNrOrHash, overrides)
+		result := tree01(tx, ctx, s.b, args, callArgs, blockNrOrHash, overrides)
 		
 			
 			// fmt.Println("first")
