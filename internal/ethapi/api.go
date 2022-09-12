@@ -2016,7 +2016,7 @@ func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 
 
 
-func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  int {
+func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  *big.Int {
 	
 	blockNbr,_ := pendingBlock.Number()
 	// var results hexutil.Bytes
@@ -2038,15 +2038,18 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 		}
 
 		results := tree01(tx, ctx, s.b, args, callArgs, blockNrOrHash, overrides)
-		
-			
-		fmt.Println(results)
-			// fmt.Println(evm)
+		if results == 1 {
+			if typeTx == 2 {
+				return tx.GasFeeCap()
+			}else {
+					return tx.GasPrice()
+			}
+		}
 			
 	}
 
 
-	return 0
+	return big.NewInt(0)
 
 	
 }
@@ -2056,9 +2059,16 @@ func tree01(tx *types.Transaction, ctx context.Context, s Backend, args Transact
 	if len(tx.Data()) > 11 {
 		input := hexutil.Bytes(tx.Data())
 		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4  || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3  || string(input[0:4]) != inp6  || string(input[0:4]) != inp7  || string(input[0:4]) != inp8  || string(input[0:4]) != inp9  || string(input[0:4]) != inp10  || string(input[0:4]) != inp11  || string(input[0:4]) != inp12  || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || *tx.To() != add4 || *tx.To() != add5 || *tx.To() != add6 || *tx.To() != add7 || *tx.To() != add8 || *tx.To() != add9 || *tx.To() != add10 || *tx.To() != add11 || *tx.To() != add12 || *tx.To() != add13 || *tx.To() != add14 {
-			result, _ := DoCallForTest(ctx, s, args, args0, blockNrOrHash, overrides, s.RPCEVMTimeout(), s.RPCGasCap())
+			result, err := DoCallForTest(ctx, s, args, args0, blockNrOrHash, overrides, s.RPCEVMTimeout(), s.RPCGasCap())
 			// }
-			fmt.Print(result)
+			if err != nil {
+				return 0
+			}
+			// If the result contains a revert reason, try to unpack and return it.
+			if len(results.Revert()) > 0 {
+
+				return 1
+			}
 			return 0
 
 		} else {
