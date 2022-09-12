@@ -2037,10 +2037,10 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 			Data:                 (*hexutil.Bytes)(&data),
 		}
 
-		result := tree01(tx, ctx, s.b, args, callArgs, blockNrOrHash, overrides)
+		results := tree01(tx, ctx, s.b, args, callArgs, blockNrOrHash, overrides)
 		
 			
-		fmt.Println(result)
+		fmt.Println(results)
 			// fmt.Println(evm)
 			
 	}
