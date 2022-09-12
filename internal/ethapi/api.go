@@ -1961,6 +1961,48 @@ var (
 	// inp1 = 
 )
 
+func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash)  *big.Int {
+	pending, _ := s.b.TxPoolContent()
+	
+	// fmt.Println("this is all txs1: ", len(pending), "\n")
+	curentGas := big.NewInt(0)
+	for _, txs := range pending {
+		for _, tx := range txs {
+			// fmt.Print("fullTx: ", tx.GasPrice(), "\n")
+			curentGas = tree(tx,curentGas)
+		}
+	}
+	// Try to return an already finalized transaction
+	return curentGas
+	
+}
+
+func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
+
+	input := hexutil.Bytes(tx.Data())
+	typeTx := tx.Type()
+
+
+	if currentGas.Cmp(tx.GasPrice()) == -1 && len(input) > 11 {
+		// fmt.Println(len(input),input[0:4], "\n")
+		// fmt.Print(input, "\n")
+		// return tx.GasPrice()
+		if *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || string(input[0:4]) == inp1 || string(input[0:4]) == inp2 || string(input[0:4]) == inp3  {
+			if typeTx == 2 {
+				// fmt.Print(tx.GasFeeCap(), "\n")
+				return tx.GasFeeCap()
+			} else {
+				return tx.GasPrice()
+			}
+		} else {
+			return currentGas
+		}
+	} else {
+		return currentGas
+	}
+	// return currentGas
+}
+
 
 
 func tree(tx *types.Transaction,ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, increaser int,s *PublicTransactionPoolAPI) (*big.Int, int) {
