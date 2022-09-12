@@ -2016,10 +2016,10 @@ func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 
 
 
-func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  hexutil.Bytes {
+func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  int {
 	
 	blockNbr,_ := pendingBlock.Number()
-	var results *core.ExecutionResult
+	// var results hexutil.Bytes
 	
 	block, _ := s.b.BlockByNumber(ctx, blockNbr)
 
@@ -2046,7 +2046,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 	}
 
 
-	return results.Return()
+	return 0
 
 	
 }
