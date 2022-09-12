@@ -1804,7 +1804,7 @@ func (s *PublicTransactionPoolAPI) DoSimulate(ctx context.Context, args Transact
 // 	r2 hexutil.Bytes
 // }
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  hexutil.Bytes {
+func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  (hexutil.Bytes, error) {
 	// pending, _ := s.b.TxPoolContent()
 	// var beta  *PublicBlockChainAPI
 	blockNbr,_ := pendingBlock.Number()
@@ -1864,10 +1864,18 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 				
 				msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
 				results, _ = core.ApplyMessage(evm, msg1, gasGp)
-				
+				if err != nil {
+					fmt.Println(err)
+					return nil, err
+				}
+						// If the result contains a revert reason, try to unpack and return it.
+				if len(results.Revert()) > 0 {
+					return nil, newRevertError(results)
+				}
+				return results.Return(), results.Err
 				 
 				
-				return results.Return()
+				// return results.Return()
 				}else {
 					// fmt.Println("last")
 					msg, _ := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
@@ -1876,16 +1884,19 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		}
 	}
 
-	// go func() {
-	// 	<-ctx.Done()
-	// 	evm.Cancel()
-	// }()
+	go func() {
+		<-ctx.Done()
+		evm.Cancel()
+	}()
+
+	
+
 
 	// fields = map[string]interface{}{
 	// 	"first":         results1.Return(),
 	// 	"last":       results2.Return(),
 	// }
-	return results.Return()
+	return results.Return(), nil
 	// result = append(data["transactions"])
 
 	// fmt.Printf("the type of transcytions is: %T", data["transactions"] , "\n")
@@ -1928,7 +1939,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 }
 var (
 	
-
+	
 	add1, _ = decodeAddress("0xC36442b4a4522E871399CD717aBDD847Ab11FE88")
 	add2, _ = decodeAddress("0x2953399124F0cBB46d2CbACD8A89cF0599974963")
 	add3, _ = decodeAddress("0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45")
@@ -1943,7 +1954,7 @@ var (
 	add12, _ = decodeAddress("0xDb46d1Dc155634FbC732f92E853b10B288AD5a1d")
 	add13, _ = decodeAddress("0x4251BFEaa6f98C0AF44E7435b2808e443Ace02CA")
 	add14, _ = decodeAddress("0xBa7fb9610D15464E9f8641dEEECa7f660Ff0169a")
-
+	
 	inp1 = "0xa9059cbb"
 	inp2 = "0x095ea7b3"
 	inp3 = "0x1b2ef1ca"
@@ -1978,11 +1989,11 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 }
 
 func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
-
+	
 	input := hexutil.Bytes(tx.Data())
 	typeTx := tx.Type()
 
-
+	
 	if currentGas.Cmp(tx.GasPrice()) == -1 && len(input) > 11 {
 		// fmt.Println(len(input),input[0:4], "\n")
 		// fmt.Print(input, "\n")
@@ -1991,12 +2002,12 @@ func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 			if typeTx == 2 {
 				// fmt.Print(tx.GasFeeCap(), "\n")
 				return tx.GasFeeCap()
-			} else {
-				return tx.GasPrice()
+				} else {
+					return tx.GasPrice()
 			}
-		} else {
-			return currentGas
-		}
+			} else {
+				return currentGas
+			}
 	} else {
 		return currentGas
 	}
@@ -2005,41 +2016,57 @@ func tree(tx *types.Transaction,currentGas *big.Int) *big.Int{
 
 
 
-// func tree(tx *types.Transaction,ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, increaser int,s *PublicTransactionPoolAPI) (*big.Int, int) {
-// 	currentGas := big.NewInt(0)
-// 	fmt.Print(currentGas)
-// 	if len(tx.Data()) > 11 {
-// 		input := hexutil.Bytes(tx.Data())
-// 		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4  || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3  || string(input[0:4]) != inp6  || string(input[0:4]) != inp7  || string(input[0:4]) != inp8  || string(input[0:4]) != inp9  || string(input[0:4]) != inp10  || string(input[0:4]) != inp11  || string(input[0:4]) != inp12  || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || *tx.To() != add4 || *tx.To() != add5 || *tx.To() != add6 || *tx.To() != add7 || *tx.To() != add8 || *tx.To() != add9 || *tx.To() != add10 || *tx.To() != add11 || *tx.To() != add12 || *tx.To() != add13 || *tx.To() != add14 {
-// 			// typeTx := tx.Type()
-// 			increaser = increaser + 1
-// 			// data := args.data()
-// 			// args0 := TransactionArgs{
-// 			// 	From:                 tx.From(),
-// 			// 	To:                   tx.To(),
-// 			// 	GasPrice:             tx.GasPrice(),
-// 			// 	MaxFeePerGas:         tx.MaxFeePerGas(),
-// 			// 	MaxPriorityFeePerGas: tx.MaxPriorityFeePerGas(),
-// 			// 	Value:                tx.Value(),
-// 			// 	Data:                 (*hexutil.Bytes)(&data),
-// 			// 	AccessList:           tx.AccessList(),
-// 			// }
-// 			// result, err := DoSimulate(ctx, args, args0, blockNrOrHas, overrides,s)
-// 			// fmt.Println(result,err)
-// 			// if typeTx == 2 {
-// 			// 	return tx.GasTipCap(), increaser
-// 			// } else {
-// 			// 	return tx.GasPrice(), increaser
-// 			// }
-// 			return tx.GasPrice(), increaser
+func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  hexutil.Bytes {
+	
+	blockNbr,_ := pendingBlock.Number()
+	
+	
+	block, _ := s.b.BlockByNumber(ctx, blockNbr)
 
-// 		} else {
-// 			return currentGas, increaser
-// 		}
-// 	} else {
-// 		return currentGas, increaser
-// 	}
-// }
+	txs := block.Transactions()
+
+	for _, tx := range txs {
+
+		signer := types.MakeSigner(s.b.ChainConfig(), big.NewInt(0).SetUint64(block.NumberU64()))
+		from, _ := types.Sender(signer, tx)
+		data := tx.Data()
+		callArgs := TransactionArgs{
+			From:                 &from,
+			To:                   tx.To(),
+			Value:                (*hexutil.Big)(tx.Value()),
+			Data:                 (*hexutil.Bytes)(&data),
+		}
+
+		result = tree01(tx, ctx, s.b, args, callArgs, blockNrOrHash, overrides)
+		
+			
+			// fmt.Println("first")
+			// fmt.Println(evm)
+			
+	}
+
+
+	return results.Return()
+
+	
+}
+
+func tree01(tx *types.Transaction, ctx context.Context, s *PublicTransactionPoolAPI, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) int {
+	
+	if len(tx.Data()) > 11 {
+		input := hexutil.Bytes(tx.Data())
+		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4  || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3  || string(input[0:4]) != inp6  || string(input[0:4]) != inp7  || string(input[0:4]) != inp8  || string(input[0:4]) != inp9  || string(input[0:4]) != inp10  || string(input[0:4]) != inp11  || string(input[0:4]) != inp12  || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || *tx.To() != add4 || *tx.To() != add5 || *tx.To() != add6 || *tx.To() != add7 || *tx.To() != add8 || *tx.To() != add9 || *tx.To() != add10 || *tx.To() != add11 || *tx.To() != add12 || *tx.To() != add13 || *tx.To() != add14 {
+			result, _ = DoCallForTest(ctx, s.b, args, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
+			// }
+			return 0
+
+		} else {
+			return 0
+		}
+	} else {
+		return 0
+	}
+}
 
 func decodeAddress(s string) (common.Address, error) {
 	b, err := hexutil.Decode(s)
