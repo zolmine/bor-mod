@@ -1807,9 +1807,11 @@ func (s *PublicTransactionPoolAPI) DoSimulate(ctx context.Context, args Transact
 func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  (hexutil.Bytes, error) {
 	// pending, _ := s.b.TxPoolContent()
 	// var beta  *PublicBlockChainAPI
+	
 	blockNbr,_ := pendingBlock.Number()
-	// blockHash,_ := pendingBlock.Hash()
-	// fmt.Println(blockNbr,tt)
+	blockHash,_ := blockNrOrHash.Number()
+	fmt.Println("the blockNbr is: ",pendingBlock, "and nbr: ",blockNbr )
+	fmt.Println("the blockHash is: ",blockNrOrHash, "and nbrof hash: ",blockHash )
 	
 	
 	block, _ := s.b.BlockByNumber(ctx, blockNbr)
