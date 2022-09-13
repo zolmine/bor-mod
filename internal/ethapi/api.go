@@ -1850,6 +1850,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		// result := newRPCTransactionFromBlockHash(block)
 		signer := types.MakeSigner(s.b.ChainConfig(), big.NewInt(0).SetUint64(block.NumberU64()))
 		from, _ := types.Sender(signer, tx)
+		
 		data := tx.Data()
 		callArgs := TransactionArgs{
 			From:                 &from,
@@ -1857,6 +1858,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 			Value:                (*hexutil.Big)(tx.Value()),
 			Data:                 (*hexutil.Bytes)(&data),
 		}
+		fmt.Println("hash: ", tx.Hash())
 		if idx == 0 {
 			evm, gasGp, header = DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 			// fmt.Println("first")
