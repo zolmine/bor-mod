@@ -1833,6 +1833,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 	txs := block.Transactions()
 	// transactions := make([]interface{}, len(txs))
 	// var err error
+	fmt.Println(txs)
 	var (
 		evm *vm.EVM
 		gasGp *core.GasPool
