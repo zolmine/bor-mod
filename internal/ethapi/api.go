@@ -1813,23 +1813,23 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 	// fmt.Println("the blockNbr is: ",pendingBlock, "and nbr: ",blockNbr )
 	// fmt.Println("the blockHash is: ",blockNrOrHash, "and nbrof hash: ",blockHash )
 	
-	
-	block, _ := s.b.BlockByNumber(ctx, number)
-	// if block != nil && err == nil {
-	// response, _ := s.rpcMarshalBlock(ctx, block, true, true)
-	// 	if err == nil && blockNbr == rpc.PendingBlockNumber {
-	// 		// Pending blocks need to nil out a few fields
-	// 		for _, field := range []string{"hash", "nonce", "miner"} {
-	// 			response[field] = nil
-	// 		}
-	// 	}
+	block, err := s.b.BlockByNumber(ctx, number)
+	if block != nil && err == nil {
+		response, err := s.rpcMarshalBlock(ctx, block, true, true)
+		if err == nil && number == rpc.PendingBlockNumber {
+			// Pending blocks need to nil out a few fields
+			for _, field := range []string{"hash", "nonce", "miner"} {
+				response[field] = nil
+			}
+		}
 
 		// append marshalled bor transaction
+		if err == nil && response != nil {
+			response = s.appendRPCMarshalBorTransaction(ctx, block, response, fullTx)
+		}
+	}
 	
-	// data := s.appendRPCMarshalBorTransaction(ctx, block, response, true)
-	// formatTx := func(tx *types.Transaction) *RPCTransaction {
-	// 	return newRPCTransactionFromBlockHash(block, tx.Hash(), s.b.ChainConfig())
-	// }
+
 	txs := block.Transactions()
 	// transactions := make([]interface{}, len(txs))
 	// var err error
