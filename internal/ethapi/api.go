@@ -1716,7 +1716,7 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 	if err != nil {
 		return resultAfter, fmt.Errorf("err: %w (supplied gas %d)", err, msg.Gas())
 	}
-	return result, nil
+	return resultAfter, nil
 }
 
 func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, timeout time.Duration, globalGasCap uint64) (*vm.EVM, *core.GasPool, *types.Header) {
