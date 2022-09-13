@@ -1840,7 +1840,8 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		// fields  rs
 		
 	)
-	roundCounter := len(txs) * 0.7
+	var roundCounter float64 = len(txs) * float64(0.7)
+
 	for idx, tx := range txs {
 		// if transactions[i], err = formatTx(tx); err != nil {
 		// 	// return nil, err
