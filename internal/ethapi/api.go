@@ -1016,7 +1016,7 @@ func DoCall(ctx context.Context, b Backend, args TransactionArgs, blockNrOrHash 
 		evm.Cancel()
 	}()
 
-	// Execute the message.
+	// Execute the message.	
 	gp := new(core.GasPool).AddGas(math.MaxUint64)
 	result, err := core.ApplyMessage(evm, msg, gp)
 	if err := vmError(); err != nil {
@@ -1804,17 +1804,17 @@ func (s *PublicTransactionPoolAPI) DoSimulate(ctx context.Context, args Transact
 // 	r2 hexutil.Bytes
 // }
 // GetTransactionByHash returns the transaction for the given hash
-func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash , overrides *StateOverride)  (hexutil.Bytes, error) {
+func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, number rpc.BlockNumber , overrides *StateOverride)  (hexutil.Bytes, error) {
 	// pending, _ := s.b.TxPoolContent()
 	// var beta  *PublicBlockChainAPI
 	
-	blockNbr,_ := pendingBlock.Number()
-	blockHash,_ := blockNrOrHash.Number()
-	fmt.Println("the blockNbr is: ",pendingBlock, "and nbr: ",blockNbr )
-	fmt.Println("the blockHash is: ",blockNrOrHash, "and nbrof hash: ",blockHash )
+	// blockNbr,_ := pendingBlock.Number()
+	// blockHash,_ := blockNrOrHash.Number()
+	// fmt.Println("the blockNbr is: ",pendingBlock, "and nbr: ",blockNbr )
+	// fmt.Println("the blockHash is: ",blockNrOrHash, "and nbrof hash: ",blockHash )
 	
 	
-	block, _ := s.b.BlockByNumber(ctx, blockNbr)
+	block, _ := s.b.BlockByNumber(ctx, number)
 	// if block != nil && err == nil {
 	// response, _ := s.rpcMarshalBlock(ctx, block, true, true)
 	// 	if err == nil && blockNbr == rpc.PendingBlockNumber {
