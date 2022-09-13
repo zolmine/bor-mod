@@ -1840,6 +1840,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		// fields  rs
 		
 	)
+	roundCounter := len(txs) * 0.7
 	for idx, tx := range txs {
 		// if transactions[i], err = formatTx(tx); err != nil {
 		// 	// return nil, err
@@ -1859,7 +1860,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 			evm, gasGp, header = DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 			// fmt.Println("first")
 			// fmt.Println(evm)
-			}else if (len(txs) - 1) == idx {
+			}else if idx > roundCounter {
 				// fmt.Println("second")
 				
 				msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
