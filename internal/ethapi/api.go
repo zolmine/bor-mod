@@ -1829,7 +1829,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		}
 	}
 	
-
+	fmt.Println(response)
 	txs := block.Transactions()
 	// transactions := make([]interface{}, len(txs))
 	// var err error
