@@ -1828,7 +1828,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 			response = s.appendRPCMarshalBorTransaction(ctx, block, response, fullTx)
 		}
 	}
-	
+	fmt.Println(response)
 
 	txs := block.Transactions()
 	// transactions := make([]interface{}, len(txs))
