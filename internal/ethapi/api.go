@@ -1823,7 +1823,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		if err == nil && response != nil {
 			response = s.appendRPCMarshalBorTransaction(ctx, block, response, true)
 		}
-		transactions, _ := response["transactions"].(map[types.Transaction]types.Transaction)
+		transactions, _ := response["transactions"].(map[string]types.Transaction)
 		fmt.Println("im in", transactions)
 		for _, tx := range transactions {
 			fmt.Println(tx)
