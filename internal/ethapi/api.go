@@ -1337,28 +1337,6 @@ func RPCMarshalBlock(block *types.Block, inclTx bool, fullTx bool, config *param
 
 	return fields, nil
 }
-func RPCMarshalBlockForTest(block *types.Block, inclTx bool, fullTx bool, config *params.ChainConfig) (map[int]*RPCTransaction, error) {
-	// fields := RPCMarshalHeader(block.Header())
-	// fields["size"] = hexutil.Uint64(block.Size())
-
-	formatTx := func(tx *types.Transaction) *RPCTransaction {
-		return newRPCTransactionFromBlockHash(block, tx.Hash(), config)
-	}
-
-	txs := block.Transactions()
-	transactions := make(map[int]*RPCTransaction, len(txs))
-
-	for i, tx := range txs {
-		fmt.Println(tx.Hash())
-		transactions[i] = formatTx(tx)
-		// if transactions[i] = formatTx(tx); err != nil {
-		// 	return nil, err
-		// }
-	}
-
-	return transactions, nil
-
-}
 
 // rpcMarshalHeader uses the generalized output filler, then adds the total difficulty field, which requires
 // a `PublicBlockchainAPI`.
@@ -1380,7 +1358,7 @@ func (s *PublicBlockChainAPI) rpcMarshalBlock(ctx context.Context, b *types.Bloc
 	}
 	return fields, err
 }
-func (s *PublicBlockChainAPI) rpcMarshalBlockForTest(ctx context.Context, b *types.Block, inclTx bool, fullTx bool) (map[int]*RPCTransaction, error) {
+func (s *PublicBlockChainAPI) rpcMarshalBlockForTest(ctx context.Context, b *types.Block, inclTx bool, fullTx bool) (map[string]*RPCTransaction, error) {
 	fields, err := RPCMarshalBlockForTest(b, inclTx, fullTx, s.b.ChainConfig())
 	if err != nil {
 		return nil, err
@@ -1828,6 +1806,30 @@ func (s *PublicTransactionPoolAPI) DoSimulate(ctx context.Context, args Transact
 //	}
 //
 // GetTransactionByHash returns the transaction for the given hash
+
+func RPCMarshalBlockForTest(block *types.Block, inclTx bool, fullTx bool, config *params.ChainConfig) (map[string]*RPCTransaction, error) {
+	// fields := RPCMarshalHeader(block.Header())
+	// fields["size"] = hexutil.Uint64(block.Size())
+
+	formatTx := func(tx *types.Transaction) *RPCTransaction {
+		return newRPCTransactionFromBlockHash(block, tx.Hash(), config)
+	}
+
+	txs := block.Transactions()
+	transactions := make(map[string]*RPCTransaction, len(txs))
+
+	for i, tx := range txs {
+		fmt.Println(tx.Hash())
+		transactions[string(i)] = formatTx(tx)
+		// if transactions[i] = formatTx(tx); err != nil {
+		// 	return nil, err
+		// }
+	}
+
+	return transactions, nil
+
+}
+
 func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, number rpc.BlockNumber, overrides *StateOverride) (hexutil.Bytes, error) {
 	// pending, _ := s.b.TxPoolContent()
 	// var beta  *PublicBlockChainAPI
@@ -1846,8 +1848,8 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		// append marshalled bor transaction
 
 		if err == nil && response != nil {
-			for i, tx := range response {
-				fmt.Println("this is the newHash: ", response[i].Hash, "  secondOne : ", tx.Hash)
+			for _, tx := range response {
+				fmt.Println("this is the newHash: ", tx.Hash)
 			}
 		}
 
