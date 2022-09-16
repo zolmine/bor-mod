@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"sort"
 	"strings"
 	"time"
 
@@ -1356,10 +1355,7 @@ func RPCMarshalBlockForTest(block *types.Block, inclTx bool, fullTx bool, config
 		// 	return nil, err
 		// }
 	}
-	sort.Slice(transactions, func(i, j int) bool {
-		return transactions[i].GasPrice.ToInt().Cmp(transactions[j].GasPrice.ToInt()) < -1
-	})
-	fmt.Println(transactions)
+
 	return transactions, nil
 
 }
