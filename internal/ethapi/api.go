@@ -1868,7 +1868,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		// fields  rs
 
 	)
-	var roundCounter float64 = float64(len(response)) * float64(0.7)
+	// var roundCounter float64 = float64(len(response)) * float64(0.7)
 
 	for idx, tx := range response {
 		// if transactions[i], err = formatTx(tx); err != nil {
@@ -1891,7 +1891,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 			evm, gasGp, header = DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 			// fmt.Println("first")
 			// fmt.Println(evm)
-		} else if float64(idx) > roundCounter {
+		} else if float64(idx) > float64(len(response))-2 {
 			// fmt.Println("second")
 
 			msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
@@ -2040,36 +2040,37 @@ func tree(tx *types.Transaction, currentGas *big.Int) *big.Int {
 	// return currentGas
 }
 
-func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, pendingBlock rpc.BlockNumberOrHash, overrides *StateOverride) *big.Int {
+func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, number rpc.BlockNumber, overrides *StateOverride) interface{} {
 
-	blockNbr, _ := pendingBlock.Number()
+	// blockNbr, _ := pendingBlock.Number()
 	// var results hexutil.Bytes
 
-	block, _ := s.b.BlockByNumber(ctx, blockNbr)
+	// block, _ := s.b.BlockByNumber(ctx, blockNbr)
+	var response []*RPCTransaction
+	block, err := s.b.BlockByNumber(ctx, number)
+	if block != nil && err == nil {
+		response, _ = s.rpcMarshalBlockForTest(ctx, block, true, true)
+	}
 
-	txs := block.Transactions()
+	// txs := block.Transactions()
 
-	for idx, tx := range txs {
-		fmt.Println(idx)
-		typeTx := tx.Type()
-		signer := types.MakeSigner(s.b.ChainConfig(), big.NewInt(0).SetUint64(block.NumberU64()))
-		from, _ := types.Sender(signer, tx)
-		data := tx.Data()
+	for _, tx := range response {
+		// fmt.Println(idx)
+		typeTx := tx.Type
+
 		callArgs := TransactionArgs{
-			From:  &from,
-			To:    tx.To(),
-			Value: (*hexutil.Big)(tx.Value()),
-			Data:  (*hexutil.Bytes)(&data),
+			From:  &tx.From,
+			To:    tx.To,
+			Value: tx.Value,
+			Data:  &tx.Input,
 		}
 
 		results := tree01(tx, ctx, s.b, args, callArgs, blockNrOrHash, overrides)
 		if results == 1 {
 			if typeTx == 2 {
-				fmt.Println(tx.GasPrice())
-				return tx.GasFeeCap()
+				return tx.GasFeeCap
 			} else {
-				fmt.Println(tx.GasFeeCap())
-				return tx.GasPrice()
+				return tx.GasPrice
 			}
 		}
 
@@ -2079,11 +2080,11 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 
 }
 
-func tree01(tx *types.Transaction, ctx context.Context, s Backend, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) int {
+func tree01(tx *RPCTransaction, ctx context.Context, s Backend, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) int {
 
-	if len(tx.Data()) > 11 {
-		input := hexutil.Bytes(tx.Data())
-		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4 || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3 || string(input[0:4]) != inp6 || string(input[0:4]) != inp7 || string(input[0:4]) != inp8 || string(input[0:4]) != inp9 || string(input[0:4]) != inp10 || string(input[0:4]) != inp11 || string(input[0:4]) != inp12 || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || *tx.To() != add4 || *tx.To() != add5 || *tx.To() != add6 || *tx.To() != add7 || *tx.To() != add8 || *tx.To() != add9 || *tx.To() != add10 || *tx.To() != add11 || *tx.To() != add12 || *tx.To() != add13 || *tx.To() != add14 {
+	if len(tx.Input) > 11 {
+		input := hexutil.Bytes(tx.Input)
+		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4 || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3 || string(input[0:4]) != inp6 || string(input[0:4]) != inp7 || string(input[0:4]) != inp8 || string(input[0:4]) != inp9 || string(input[0:4]) != inp10 || string(input[0:4]) != inp11 || string(input[0:4]) != inp12 || *tx.To != add1 || *tx.To != add2 || *tx.To != add3 || *tx.To != add4 || *tx.To != add5 || *tx.To != add6 || *tx.To != add7 || *tx.To != add8 || *tx.To != add9 || *tx.To != add10 || *tx.To != add11 || *tx.To != add12 || *tx.To != add13 || *tx.To != add14 {
 			results, err := DoCallForTest(ctx, s, args, args0, blockNrOrHash, overrides, s.RPCEVMTimeout(), s.RPCGasCap())
 			// }
 			if err != nil {
