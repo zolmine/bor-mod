@@ -1848,7 +1848,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		// append marshalled bor transaction
 
 		if err == nil && response != nil {
-			for i, tx := range response {
+			for _, tx := range response {
 				fmt.Println("this is the newHash: ", tx.Hash)
 			}
 		}
