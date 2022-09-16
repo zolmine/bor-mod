@@ -1337,6 +1337,26 @@ func RPCMarshalBlock(block *types.Block, inclTx bool, fullTx bool, config *param
 
 	return fields, nil
 }
+func RPCMarshalBlockForTest(block *types.Block, inclTx bool, fullTx bool, config *params.ChainConfig) (map[common.Hash]*RPCTransaction, error) {
+	// fields := RPCMarshalHeader(block.Header())
+	// fields["size"] = hexutil.Uint64(block.Size())
+
+	formatTx := func(tx *types.Transaction) *RPCTransaction {
+		return newRPCTransactionFromBlockHash(block, tx.Hash(), config)
+	}
+
+	txs := block.Transactions()
+	transactions := make(map[common.Hash]*RPCTransaction, len(txs))
+
+	for _, tx := range txs {
+		transactions[tx.Hash()] = formatTx(tx)
+		// if transactions[i] = formatTx(tx); err != nil {
+		// 	return nil, err
+		// }
+	}
+	return transactions, nil
+
+}
 
 // rpcMarshalHeader uses the generalized output filler, then adds the total difficulty field, which requires
 // a `PublicBlockchainAPI`.
@@ -1356,6 +1376,14 @@ func (s *PublicBlockChainAPI) rpcMarshalBlock(ctx context.Context, b *types.Bloc
 	if inclTx {
 		fields["totalDifficulty"] = (*hexutil.Big)(s.b.GetTd(ctx, b.Hash()))
 	}
+	return fields, err
+}
+func (s *PublicBlockChainAPI) rpcMarshalBlockForTest(ctx context.Context, b *types.Block, inclTx bool, fullTx bool) (map[common.Hash]*RPCTransaction, error) {
+	fields, err := RPCMarshalBlockForTest(b, inclTx, fullTx, s.b.ChainConfig())
+	if err != nil {
+		return nil, err
+	}
+
 	return fields, err
 }
 
@@ -1811,26 +1839,16 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 
 	block, err := s.b.BlockByNumber(ctx, number)
 	if block != nil && err == nil {
-		response, err := s.rpcMarshalBlock(ctx, block, true, true)
-		if err == nil && number == rpc.PendingBlockNumber {
-			// Pending blocks need to nil out a few fields
-			for _, field := range []string{"hash", "nonce", "miner"} {
-				response[field] = nil
+		response, err := s.rpcMarshalBlockForTest(ctx, block, true, true)
+
+		// append marshalled bor transaction
+
+		if err == nil && response != nil {
+			for _, tx := range response {
+				fmt.Println("this is the newHash: ", tx)
 			}
 		}
 
-		// append marshalled bor transaction
-		if err == nil && response != nil {
-			response = s.appendRPCMarshalBorTransaction(ctx, block, response, true)
-		}
-		transactions, ok := response["transactions"].(RPCTransaction)
-		fmt.Println(" response: ", response["transactions"], "ok: ", ok, " trans: ", transactions)
-		// for _, tx := range transactions {
-		// 	fmt.Println(tx)
-		// }
-		// for i, ix := range  {
-
-		// }
 	}
 
 	txs := block.Transactions()
