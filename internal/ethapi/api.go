@@ -1349,6 +1349,7 @@ func RPCMarshalBlockForTest(block *types.Block, inclTx bool, fullTx bool, config
 	transactions := make(map[int]*RPCTransaction, len(txs))
 
 	for i, tx := range txs {
+		fmt.Println(tx.Hash())
 		transactions[i] = formatTx(tx)
 		// if transactions[i] = formatTx(tx); err != nil {
 		// 	return nil, err
