@@ -1840,22 +1840,22 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 	// fmt.Println("the blockHash is: ",blockNrOrHash, "and nbrof hash: ",blockHash )
 
 	// var transactions types.Transaction
-
+	var response []*RPCTransaction
 	block, err := s.b.BlockByNumber(ctx, number)
 	if block != nil && err == nil {
-		response, err := s.rpcMarshalBlockForTest(ctx, block, true, true)
+		response, _ = s.rpcMarshalBlockForTest(ctx, block, true, true)
 
 		// append marshalled bor transaction
 
-		if err == nil && response != nil {
-			for _, tx := range response {
-				fmt.Println("this is the newHash: ", tx.Hash)
-			}
-		}
+		// if err == nil && response != nil {
+		// 	for _, tx := range response {
+		// 		fmt.Println("this is the newHash: ", tx.Hash)
+		// 	}
+		// }
 
 	}
 
-	txs := block.Transactions()
+	// txs := block.Transactions()
 	// transactions := make([]interface{}, len(txs))
 	// var err error
 	// fmt.Println(txs)
@@ -1868,23 +1868,23 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		// fields  rs
 
 	)
-	var roundCounter float64 = float64(len(txs)) * float64(0.7)
+	var roundCounter float64 = float64(len(response)) * float64(0.7)
 
-	for idx, tx := range txs {
+	for idx, tx := range response {
 		// if transactions[i], err = formatTx(tx); err != nil {
 		// 	// return nil, err
 		// 	fmt.Println(transactions[i].Hash())
 		// }
 		// result := newRPCTransactionFromBlockHash(block)
-		signer := types.MakeSigner(s.b.ChainConfig(), big.NewInt(0).SetUint64(block.NumberU64()))
-		from, _ := types.Sender(signer, tx)
+		// signer := types.MakeSigner(s.b.ChainConfig(), big.NewInt(0).SetUint64(block.NumberU64()))
+		// from, _ := types.Sender(signer, tx)
 
-		data := tx.Data()
+		// data := tx.Data
 		callArgs := TransactionArgs{
-			From:  &from,
-			To:    tx.To(),
-			Value: (*hexutil.Big)(tx.Value()),
-			Data:  (*hexutil.Bytes)(&data),
+			From:  &tx.From,
+			To:    tx.To,
+			Value: tx.Value,
+			Data:  &tx.Input,
 		}
 		// fmt.Println("hash: ", tx.Hash())
 		if idx == 0 {
