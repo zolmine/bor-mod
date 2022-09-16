@@ -1337,7 +1337,7 @@ func RPCMarshalBlock(block *types.Block, inclTx bool, fullTx bool, config *param
 
 	return fields, nil
 }
-func RPCMarshalBlockForTest(block *types.Block, inclTx bool, fullTx bool, config *params.ChainConfig) (map[common.Hash]*RPCTransaction, error) {
+func RPCMarshalBlockForTest(block *types.Block, inclTx bool, fullTx bool, config *params.ChainConfig) (map[int]*RPCTransaction, error) {
 	// fields := RPCMarshalHeader(block.Header())
 	// fields["size"] = hexutil.Uint64(block.Size())
 
@@ -1346,10 +1346,10 @@ func RPCMarshalBlockForTest(block *types.Block, inclTx bool, fullTx bool, config
 	}
 
 	txs := block.Transactions()
-	transactions := make(map[common.Hash]*RPCTransaction, len(txs))
+	transactions := make(map[int]*RPCTransaction, len(txs))
 
-	for _, tx := range txs {
-		transactions[tx.Hash()] = formatTx(tx)
+	for i, tx := range txs {
+		transactions[i] = formatTx(tx)
 		// if transactions[i] = formatTx(tx); err != nil {
 		// 	return nil, err
 		// }
@@ -1378,7 +1378,7 @@ func (s *PublicBlockChainAPI) rpcMarshalBlock(ctx context.Context, b *types.Bloc
 	}
 	return fields, err
 }
-func (s *PublicBlockChainAPI) rpcMarshalBlockForTest(ctx context.Context, b *types.Block, inclTx bool, fullTx bool) (map[common.Hash]*RPCTransaction, error) {
+func (s *PublicBlockChainAPI) rpcMarshalBlockForTest(ctx context.Context, b *types.Block, inclTx bool, fullTx bool) (map[int]*RPCTransaction, error) {
 	fields, err := RPCMarshalBlockForTest(b, inclTx, fullTx, s.b.ChainConfig())
 	if err != nil {
 		return nil, err
@@ -1845,7 +1845,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 
 		if err == nil && response != nil {
 			for _, tx := range response {
-				fmt.Println("this is the newHash: ", tx)
+				fmt.Println("this is the newHash: ", tx.Hash)
 			}
 		}
 
