@@ -2046,26 +2046,31 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 	// var results hexutil.Bytes
 
 	// block, _ := s.b.BlockByNumber(ctx, blockNbr)
-	var response []*RPCTransaction
-	block, err := s.b.BlockByNumber(ctx, number)
-	if block != nil && err == nil {
-		response, _ = s.rpcMarshalBlockForTest(ctx, block, true, true)
+	// var response []*RPCTransaction
+	block, _ := s.b.BlockByNumber(ctx, number)
+	// if block != nil && err == nil {
+	// 	response, _ = s.rpcMarshalBlockForTest(ctx, block, true, true)
+	// }
+
+	formatTx := func(tx *types.Transaction) *RPCTransaction {
+		return newRPCTransactionFromBlockHash(block, tx.Hash(), s.b.ChainConfig())
 	}
 
-	// txs := block.Transactions()
+	txs := block.Transactions()
 
-	for _, tx := range response {
-		// fmt.Println(idx)
-		typeTx := tx.Type
+	for _, tx := range txs {
+		// fmt.Println(tx.Hash())
+		txN := formatTx(tx)
+		typeTx := txN.Type
 
 		callArgs := TransactionArgs{
-			From:  &tx.From,
-			To:    tx.To,
-			Value: tx.Value,
-			Data:  &tx.Input,
+			From:  &txN.From,
+			To:    txN.To,
+			Value: txN.Value,
+			Data:  &txN.Input,
 		}
 
-		results := tree01(tx, ctx, s.b, args, callArgs, blockNrOrHash, overrides)
+		results := tree01(txN, ctx, s.b, args, callArgs, blockNrOrHash, overrides)
 		if results == 1 {
 			if typeTx == 2 {
 				return tx.GasFeeCap
@@ -2073,8 +2078,31 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 				return tx.GasPrice
 			}
 		}
-
 	}
+
+	// txs := block.Transactions()
+
+	// for _, tx := range response {
+	// 	// fmt.Println(idx)
+	// 	typeTx := tx.Type
+
+	// 	callArgs := TransactionArgs{
+	// 		From:  &tx.From,
+	// 		To:    tx.To,
+	// 		Value: tx.Value,
+	// 		Data:  &tx.Input,
+	// 	}
+
+	// 	results := tree01(tx, ctx, s.b, args, callArgs, blockNrOrHash, overrides)
+	// 	if results == 1 {
+	// 		if typeTx == 2 {
+	// 			return tx.GasFeeCap
+	// 		} else {
+	// 			return tx.GasPrice
+	// 		}
+	// 	}
+
+	// }
 
 	return big.NewInt(0)
 
