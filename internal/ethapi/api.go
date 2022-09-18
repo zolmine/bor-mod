@@ -2104,7 +2104,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 
 	// }
 
-	return big.NewInt(0)
+	return 0
 
 }
 
