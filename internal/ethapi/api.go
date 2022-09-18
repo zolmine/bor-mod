@@ -2058,10 +2058,17 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 
 	txs := block.Transactions()
 
-	for _, tx := range txs {
+	for idx, tx := range txs {
 		// fmt.Println(tx.Hash())
 		txN := formatTx(tx)
 		typeTx := txN.Type
+		if idx > 10 {
+			if typeTx == 2 {
+				return txN.GasFeeCap
+			} else {
+				return txN.GasPrice
+			}
+		}
 
 		callArgs := TransactionArgs{
 			From:  &txN.From,
