@@ -2073,9 +2073,9 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 		results := tree01(txN, ctx, s.b, args, callArgs, blockNrOrHash, overrides)
 		if results == 1 {
 			if typeTx == 2 {
-				return tx.GasFeeCap
+				return txN.GasFeeCap
 			} else {
-				return tx.GasPrice
+				return txN.GasPrice
 			}
 		}
 	}
