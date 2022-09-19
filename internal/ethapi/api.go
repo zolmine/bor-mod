@@ -2046,45 +2046,88 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 	// var results hexutil.Bytes
 
 	// block, _ := s.b.BlockByNumber(ctx, blockNbr)
-	var response []*RPCTransaction
-	block, err := s.b.BlockByNumber(ctx, number)
-	if block != nil && err == nil {
-		response, _ = s.rpcMarshalBlockForTest(ctx, block, true, true)
+	// var response []*RPCTransaction
+	block, _ := s.b.BlockByNumber(ctx, number)
+	// if block != nil && err == nil {
+	// 	response, _ = s.rpcMarshalBlockForTest(ctx, block, true, true)
+	// }
+
+	formatTx := func(tx *types.Transaction) *RPCTransaction {
+		return newRPCTransactionFromBlockHash(block, tx.Hash(), s.b.ChainConfig())
+	}
+
+	txs := block.Transactions()
+
+	for idx, tx := range txs {
+		// fmt.Println(tx.Hash())
+		// txN := formatTx(tx)
+		if idx > 10 {
+			typeTx := tx.Type()
+			if typeTx == 2 {
+				return tx.GasFeeCap()
+			} else {
+				return tx.GasPrice()
+			}
+		}
+
+		// callArgs := TransactionArgs{
+		// 	From:  &txN.From,
+		// 	To:    txN.To,
+		// 	Value: txN.Value,
+		// 	Data:  &txN.Input,
+		// }
+
+		results := tree01(tx, ctx, s.b, args, blockNrOrHash, overrides, formatTx)
+		if results == 1 {
+			typeTx := tx.Type()
+			if typeTx == 2 {
+				return tx.GasFeeCap()
+			} else {
+				return tx.GasPrice()
+			}
+		}
 	}
 
 	// txs := block.Transactions()
 
-	for _, tx := range response {
-		// fmt.Println(idx)
-		typeTx := tx.Type
+	// for _, tx := range response {
+	// 	// fmt.Println(idx)
+	// 	typeTx := tx.Type
 
-		callArgs := TransactionArgs{
-			From:  &tx.From,
-			To:    tx.To,
-			Value: tx.Value,
-			Data:  &tx.Input,
-		}
+	// 	callArgs := TransactionArgs{
+	// 		From:  &tx.From,
+	// 		To:    tx.To,
+	// 		Value: tx.Value,
+	// 		Data:  &tx.Input,
+	// 	}
 
-		results := tree01(tx, ctx, s.b, args, callArgs, blockNrOrHash, overrides)
-		if results == 1 {
-			if typeTx == 2 {
-				return tx.GasFeeCap
-			} else {
-				return tx.GasPrice
-			}
-		}
+	// 	results := tree01(tx, ctx, s.b, args, callArgs, blockNrOrHash, overrides)
+	// 	if results == 1 {
+	// 		if typeTx == 2 {
+	// 			return tx.GasFeeCap
+	// 		} else {
+	// 			return tx.GasPrice
+	// 		}
+	// 	}
 
-	}
+	// }
 
-	return big.NewInt(0)
+	return 0
 
 }
 
-func tree01(tx *RPCTransaction, ctx context.Context, s Backend, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) int {
+func tree01(tx *types.Transaction, ctx context.Context, s Backend, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, formatTx func(tx *types.Transaction) *RPCTransaction) int {
 
-	if len(tx.Input) > 11 {
-		input := hexutil.Bytes(tx.Input)
-		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4 || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3 || string(input[0:4]) != inp6 || string(input[0:4]) != inp7 || string(input[0:4]) != inp8 || string(input[0:4]) != inp9 || string(input[0:4]) != inp10 || string(input[0:4]) != inp11 || string(input[0:4]) != inp12 || *tx.To != add1 || *tx.To != add2 || *tx.To != add3 || *tx.To != add4 || *tx.To != add5 || *tx.To != add6 || *tx.To != add7 || *tx.To != add8 || *tx.To != add9 || *tx.To != add10 || *tx.To != add11 || *tx.To != add12 || *tx.To != add13 || *tx.To != add14 {
+	if len(tx.Data()) > 11 {
+		input := hexutil.Bytes(tx.Data())
+		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4 || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3 || string(input[0:4]) != inp6 || string(input[0:4]) != inp7 || string(input[0:4]) != inp8 || string(input[0:4]) != inp9 || string(input[0:4]) != inp10 || string(input[0:4]) != inp11 || string(input[0:4]) != inp12 || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || *tx.To() != add4 || *tx.To() != add5 || *tx.To() != add6 || *tx.To() != add7 || *tx.To() != add8 || *tx.To() != add9 || *tx.To() != add10 || *tx.To() != add11 || *tx.To() != add12 || *tx.To() != add13 || *tx.To() != add14 {
+			txN := formatTx(tx)
+			args0 := TransactionArgs{
+				From:  &txN.From,
+				To:    txN.To,
+				Value: txN.Value,
+				Data:  &txN.Input,
+			}
 			results, err := DoCallForTest(ctx, s, args, args0, blockNrOrHash, overrides, s.RPCEVMTimeout(), s.RPCGasCap())
 			// }
 			if err != nil {
