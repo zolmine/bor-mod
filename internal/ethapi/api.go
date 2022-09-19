@@ -2060,29 +2060,30 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 
 	for idx, tx := range txs {
 		// fmt.Println(tx.Hash())
-		txN := formatTx(tx)
-		typeTx := txN.Type
+		// txN := formatTx(tx)
 		if idx > 10 {
+			typeTx := tx.Type()
 			if typeTx == 2 {
-				return txN.GasFeeCap
+				return tx.GasFeeCap()
 			} else {
-				return txN.GasPrice
+				return tx.GasPrice()
 			}
 		}
 
-		callArgs := TransactionArgs{
-			From:  &txN.From,
-			To:    txN.To,
-			Value: txN.Value,
-			Data:  &txN.Input,
-		}
+		// callArgs := TransactionArgs{
+		// 	From:  &txN.From,
+		// 	To:    txN.To,
+		// 	Value: txN.Value,
+		// 	Data:  &txN.Input,
+		// }
 
-		results := tree01(txN, ctx, s.b, args, callArgs, blockNrOrHash, overrides)
+		results := tree01(tx, ctx, s.b, args, blockNrOrHash, overrides, formatTx)
 		if results == 1 {
+			typeTx := tx.Type()
 			if typeTx == 2 {
-				return txN.GasFeeCap
+				return tx.GasFeeCap()
 			} else {
-				return txN.GasPrice
+				return tx.GasPrice()
 			}
 		}
 	}
@@ -2115,11 +2116,18 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 
 }
 
-func tree01(tx *RPCTransaction, ctx context.Context, s Backend, args TransactionArgs, args0 TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) int {
+func tree01(tx *types.Transaction, ctx context.Context, s Backend, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, formatTx func(tx *types.Transaction) *RPCTransaction) int {
 
-	if len(tx.Input) > 11 {
-		input := hexutil.Bytes(tx.Input)
-		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4 || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3 || string(input[0:4]) != inp6 || string(input[0:4]) != inp7 || string(input[0:4]) != inp8 || string(input[0:4]) != inp9 || string(input[0:4]) != inp10 || string(input[0:4]) != inp11 || string(input[0:4]) != inp12 || *tx.To != add1 || *tx.To != add2 || *tx.To != add3 || *tx.To != add4 || *tx.To != add5 || *tx.To != add6 || *tx.To != add7 || *tx.To != add8 || *tx.To != add9 || *tx.To != add10 || *tx.To != add11 || *tx.To != add12 || *tx.To != add13 || *tx.To != add14 {
+	if len(tx.Data()) > 11 {
+		input := hexutil.Bytes(tx.Data())
+		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4 || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3 || string(input[0:4]) != inp6 || string(input[0:4]) != inp7 || string(input[0:4]) != inp8 || string(input[0:4]) != inp9 || string(input[0:4]) != inp10 || string(input[0:4]) != inp11 || string(input[0:4]) != inp12 || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || *tx.To() != add4 || *tx.To() != add5 || *tx.To() != add6 || *tx.To() != add7 || *tx.To() != add8 || *tx.To() != add9 || *tx.To() != add10 || *tx.To() != add11 || *tx.To() != add12 || *tx.To() != add13 || *tx.To() != add14 {
+			txN := formatTx(tx)
+			args0 := TransactionArgs{
+				From:  &txN.From,
+				To:    txN.To,
+				Value: txN.Value,
+				Data:  &txN.Input,
+			}
 			results, err := DoCallForTest(ctx, s, args, args0, blockNrOrHash, overrides, s.RPCEVMTimeout(), s.RPCGasCap())
 			// }
 			if err != nil {
