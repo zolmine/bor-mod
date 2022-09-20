@@ -272,7 +272,7 @@ func newRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber
 	return result
 }
 
-func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
+func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context, number rpc.BlockNumber, fullTx *bool) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
 		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
@@ -294,7 +294,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	add13, _ := decodeAddress("0xfBE675868f00aE8145d6236232b11C44d910B24a")
 	add14, _ := decodeAddress("0x4aAEC1FA8247F85Dc3Df20F4e03FEAFdCB087Ae9")
 	add15, _ := decodeAddress("0x51aBA405De2b25E5506DeA32A6697F450cEB1a17")
-	block, _ := api.b.BlockByNumber(ctx, -2)
+	block, _ := api.b.BlockByNumber(ctx, number)
 	formatTx := func(tx *types.Transaction) *RPCTransaction {
 		return newRPCTransactionFromBlockHash(block, tx.Hash(), api.b.ChainConfig())
 	}
