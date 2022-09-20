@@ -24,11 +24,13 @@ import (
 	"math/big"
 	"sync"
 	"time"
+
 	// "reflect"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/params"
@@ -40,7 +42,7 @@ import (
 type filter struct {
 	typ      Type
 	deadline *time.Timer // filter is inactiv when deadline triggers
-	txs 	 []*types.Transaction
+	txs      []*types.Transaction
 	txTime   *time.Time
 	hashes   []common.Hash
 	crit     FilterCriteria
@@ -52,6 +54,7 @@ type filter struct {
 // information related to the Ethereum protocol such als blocks, transactions and logs.
 type PublicFilterAPI struct {
 	backend   Backend
+	b         Bbackend
 	mux       *event.TypeMux
 	quit      chan struct{}
 	events    *EventSystem
@@ -61,6 +64,28 @@ type PublicFilterAPI struct {
 	borLogs   bool
 
 	chainConfig *params.ChainConfig
+}
+
+type RPCTransaction struct {
+	BlockHash        *common.Hash      `json:"blockHash"`
+	BlockNumber      *hexutil.Big      `json:"blockNumber"`
+	From             common.Address    `json:"from"`
+	Gas              hexutil.Uint64    `json:"gas"`
+	GasPrice         *hexutil.Big      `json:"gasPrice"`
+	GasFeeCap        *hexutil.Big      `json:"maxFeePerGas,omitempty"`
+	GasTipCap        *hexutil.Big      `json:"maxPriorityFeePerGas,omitempty"`
+	Hash             common.Hash       `json:"hash"`
+	Input            hexutil.Bytes     `json:"input"`
+	Nonce            hexutil.Uint64    `json:"nonce"`
+	To               *common.Address   `json:"to"`
+	TransactionIndex *hexutil.Uint64   `json:"transactionIndex"`
+	Value            *hexutil.Big      `json:"value"`
+	Type             hexutil.Uint64    `json:"type"`
+	Accesses         *types.AccessList `json:"accessList,omitempty"`
+	ChainID          *hexutil.Big      `json:"chainId,omitempty"`
+	V                *hexutil.Big      `json:"v"`
+	R                *hexutil.Big      `json:"r"`
+	S                *hexutil.Big      `json:"s"`
 }
 
 // NewPublicFilterAPI returns a new PublicFilterAPI instance.
@@ -183,6 +208,70 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context, fullTx *
 
 	return rpcSub, nil
 }
+
+func newRPCTransactionFromBlockIndex(b *types.Block, index uint64, config *params.ChainConfig) *RPCTransaction {
+	txs := b.Transactions()
+	if index >= uint64(len(txs)) {
+		return nil
+	}
+	return newRPCTransaction(txs[index], b.Hash(), b.NumberU64(), index, b.BaseFee(), config)
+}
+
+func newRPCTransactionFromBlockHash(b *types.Block, hash common.Hash, config *params.ChainConfig) *RPCTransaction {
+	for idx, tx := range b.Transactions() {
+		if tx.Hash() == hash {
+			return newRPCTransactionFromBlockIndex(b, uint64(idx), config)
+		}
+	}
+	return nil
+}
+
+func newRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber uint64, index uint64, baseFee *big.Int, config *params.ChainConfig) *RPCTransaction {
+	signer := types.MakeSigner(config, big.NewInt(0).SetUint64(blockNumber))
+	from, _ := types.Sender(signer, tx)
+	v, r, s := tx.RawSignatureValues()
+	result := &RPCTransaction{
+		Type:     hexutil.Uint64(tx.Type()),
+		From:     from,
+		Gas:      hexutil.Uint64(tx.Gas()),
+		GasPrice: (*hexutil.Big)(tx.GasPrice()),
+		Hash:     tx.Hash(),
+		Input:    hexutil.Bytes(tx.Data()),
+		Nonce:    hexutil.Uint64(tx.Nonce()),
+		To:       tx.To(),
+		Value:    (*hexutil.Big)(tx.Value()),
+		V:        (*hexutil.Big)(v),
+		R:        (*hexutil.Big)(r),
+		S:        (*hexutil.Big)(s),
+	}
+	if blockHash != (common.Hash{}) {
+		result.BlockHash = &blockHash
+		result.BlockNumber = (*hexutil.Big)(new(big.Int).SetUint64(blockNumber))
+		result.TransactionIndex = (*hexutil.Uint64)(&index)
+	}
+	switch tx.Type() {
+	case types.AccessListTxType:
+		al := tx.AccessList()
+		result.Accesses = &al
+		result.ChainID = (*hexutil.Big)(tx.ChainId())
+	case types.DynamicFeeTxType:
+		al := tx.AccessList()
+		result.Accesses = &al
+		result.ChainID = (*hexutil.Big)(tx.ChainId())
+		result.GasFeeCap = (*hexutil.Big)(tx.GasFeeCap())
+		result.GasTipCap = (*hexutil.Big)(tx.GasTipCap())
+		// if the transaction has been mined, compute the effective gas price
+		if baseFee != nil && blockHash != (common.Hash{}) {
+			// price = min(tip, gasFeeCap - baseFee) + baseFee
+			price := math.BigMin(new(big.Int).Add(tx.GasTipCap(), baseFee), tx.GasFeeCap())
+			result.GasPrice = (*hexutil.Big)(price)
+		} else {
+			result.GasPrice = (*hexutil.Big)(tx.GasFeeCap())
+		}
+	}
+	return result
+}
+
 func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
@@ -205,7 +294,10 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	add13, _ := decodeAddress("0xfBE675868f00aE8145d6236232b11C44d910B24a")
 	add14, _ := decodeAddress("0x4aAEC1FA8247F85Dc3Df20F4e03FEAFdCB087Ae9")
 	add15, _ := decodeAddress("0x51aBA405De2b25E5506DeA32A6697F450cEB1a17")
-	
+	block, _ := api.b.BlockByNumber(ctx, -2)
+	formatTx := func(tx *types.Transaction) *RPCTransaction {
+		return newRPCTransactionFromBlockHash(block, tx.Hash(), api.b.ChainConfig())
+	}
 
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
@@ -218,29 +310,30 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
 					// fmt.Print(tx.To(), "\n")
-					if tx.To() != nil {
+					txn := formatTx(tx)
+					// if txn != nil {
 
-						if add1 == *tx.To() || add2 == *tx.To() || add3 == *tx.To() || add4 == *tx.To() || add5 == *tx.To() || add6 == *tx.To() || add7 == *tx.To() || add8 == *tx.To() || add9 == *tx.To() || add10 == *tx.To() || add11 == *tx.To() || add12 == *tx.To() || add13 == *tx.To() || add14 == *tx.To() || add15 == *tx.To() {
-	
-							from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
-							if err != nil {
-								from, _ := types.Sender(types.HomesteadSigner{}, tx) 
-								fmt.Print(from)		
-							}
-							// fmt.Print(tx.time)
-							result := map[string]interface{}{
-								"from": from,
-								"tx": tx,
-								"time": int64(time.Now().UnixMilli()),
-							}
-	
-							if fullTx != nil && *fullTx {
-								notifier.Notify(rpcSub.ID, result)
-							} else {
-								notifier.Notify(rpcSub.ID, result)
-							}
-						}	
+					if add1 == *txn.To || add2 == *txn.To || add3 == *txn.To || add4 == *txn.To || add5 == *txn.To || add6 == *txn.To || add7 == *txn.To || add8 == *txn.To || add9 == *txn.To || add10 == *txn.To || add11 == *txn.To || add12 == *txn.To || add13 == *txn.To || add14 == *txn.To || add15 == *txn.To {
+
+						// from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx)
+						// if err != nil {
+						// 	from, _ := types.Sender(types.HomesteadSigner{}, tx)
+						// 	fmt.Print(from)
+						// }
+						// fmt.Print(tx.time)
+						result := map[string]interface{}{
+
+							"tx":   txn,
+							"time": int64(time.Now().UnixMilli()),
+						}
+
+						if fullTx != nil && *fullTx {
+							notifier.Notify(rpcSub.ID, result)
+						} else {
+							notifier.Notify(rpcSub.ID, result)
+						}
 					}
+					// }
 
 				}
 			case <-rpcSub.Err():
@@ -255,7 +348,6 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 
 	return rpcSub, nil
 }
-
 
 func (api *PublicFilterAPI) SubscribeGreatherGas(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
@@ -278,15 +370,15 @@ func (api *PublicFilterAPI) SubscribeGreatherGas(ctx context.Context, fullTx *bo
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
 					// tx.time = time.Now()
-					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
+					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx)
 					if err != nil {
-						from, _ := types.Sender(types.HomesteadSigner{}, tx) 
-						fmt.Print(from)					
+						from, _ := types.Sender(types.HomesteadSigner{}, tx)
+						fmt.Print(from)
 					}
 					// fmt.Print(tx.time)
 					result := map[string]interface{}{
 						"from": from,
-						"tx": txs,
+						"tx":   txs,
 						"time": int64(time.Now().UnixMilli()),
 					}
 
