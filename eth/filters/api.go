@@ -40,7 +40,7 @@ import (
 type filter struct {
 	typ      Type
 	deadline *time.Timer // filter is inactiv when deadline triggers
-	txs 	 []*types.Transaction
+	txs      []*types.Transaction
 	txTime   *time.Time
 	hashes   []common.Hash
 	crit     FilterCriteria
@@ -205,10 +205,6 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	add13, _ := decodeAddress("0xfBE675868f00aE8145d6236232b11C44d910B24a")
 	add14, _ := decodeAddress("0x4aAEC1FA8247F85Dc3Df20F4e03FEAFdCB087Ae9")
 	add15, _ := decodeAddress("0x51aBA405De2b25E5506DeA32A6697F450cEB1a17")
-<<<<<<< HEAD
-=======
-	
->>>>>>> parent of 180973c (Update api.go)
 
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
@@ -224,44 +220,25 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 					if tx.To() != nil {
 
 						if add1 == *tx.To() || add2 == *tx.To() || add3 == *tx.To() || add4 == *tx.To() || add5 == *tx.To() || add6 == *tx.To() || add7 == *tx.To() || add8 == *tx.To() || add9 == *tx.To() || add10 == *tx.To() || add11 == *tx.To() || add12 == *tx.To() || add13 == *tx.To() || add14 == *tx.To() || add15 == *tx.To() {
-<<<<<<< HEAD
 
 							from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx)
 							if err != nil {
 								from, _ := types.Sender(types.HomesteadSigner{}, tx)
 								fmt.Print(from)
-=======
-	
-							from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
-							if err != nil {
-								from, _ := types.Sender(types.HomesteadSigner{}, tx) 
-								fmt.Print(from)		
->>>>>>> parent of 180973c (Update api.go)
 							}
 							// fmt.Print(tx.time)
 							result := map[string]interface{}{
 								"from": from,
-<<<<<<< HEAD
 								"tx":   tx,
 								"time": int64(time.Now().UnixMilli()),
 							}
 
-=======
-								"tx": tx,
-								"time": int64(time.Now().UnixMilli()),
-							}
-	
->>>>>>> parent of 180973c (Update api.go)
 							if fullTx != nil && *fullTx {
 								notifier.Notify(rpcSub.ID, result)
 							} else {
 								notifier.Notify(rpcSub.ID, result)
 							}
-<<<<<<< HEAD
 						}
-=======
-						}	
->>>>>>> parent of 180973c (Update api.go)
 					}
 
 				}
@@ -277,7 +254,6 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 
 	return rpcSub, nil
 }
-
 
 func (api *PublicFilterAPI) SubscribeGreatherGas(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
@@ -300,15 +276,15 @@ func (api *PublicFilterAPI) SubscribeGreatherGas(ctx context.Context, fullTx *bo
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
 					// tx.time = time.Now()
-					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
+					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx)
 					if err != nil {
-						from, _ := types.Sender(types.HomesteadSigner{}, tx) 
-						fmt.Print(from)					
+						from, _ := types.Sender(types.HomesteadSigner{}, tx)
+						fmt.Print(from)
 					}
 					// fmt.Print(tx.time)
 					result := map[string]interface{}{
 						"from": from,
-						"tx": txs,
+						"tx":   txs,
 						"time": int64(time.Now().UnixMilli()),
 					}
 
