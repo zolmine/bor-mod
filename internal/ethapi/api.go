@@ -1724,16 +1724,16 @@ func DoCallForTest(ctx context.Context, b Backend, args TransactionArgs, args0 T
 	return resultAfter, nil
 }
 
-func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, timeout time.Duration, globalGasCap uint64) (*vm.EVM, *core.GasPool, *types.Header) {
+func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, timeout time.Duration, globalGasCap uint64) (*vm.EVM, *core.GasPool, *types.Header, *state.StateDB) {
 	defer func(start time.Time) { log.Debug("Executing EVM call finished", "runtime", time.Since(start)) }(time.Now())
 
 	state, header, err := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
 
 	if state == nil || err != nil {
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
 	if err := overrides.Apply(state); err != nil {
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
 	// Setup context so it may be cancelled the call has completed
 	// or, in case of unmetered gas, setup a context with a timeout.
@@ -1751,7 +1751,7 @@ func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, bloc
 	msg, err := args.ToMessage(globalGasCap, header.BaseFee)
 
 	if err != nil {
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
 	evmOfTransactionBlock, _, _ := b.GetEVM(ctx, msg, state, header, &vm.Config{NoBaseFee: true})
 	// if err != nil {
@@ -1771,7 +1771,7 @@ func DoCallForAllTest(ctx context.Context, b Backend, args TransactionArgs, bloc
 	// 	return nil, nil, nil
 	// }
 	// fmt.Println(result.Return())
-	return evmOfTransactionBlock, gp, header
+	return evmOfTransactionBlock, gp, header, state
 
 }
 
@@ -1831,53 +1831,23 @@ func RPCMarshalBlockForTest(block *types.Block, inclTx bool, fullTx bool, config
 }
 
 func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, number rpc.BlockNumber, overrides *StateOverride) (hexutil.Bytes, error) {
-	// pending, _ := s.b.TxPoolContent()
-	// var beta  *PublicBlockChainAPI
 
-	// blockNbr,_ := pendingBlock.Number()
-	// blockHash,_ := blockNrOrHash.Number()
-	// fmt.Println("the blockNbr is: ",pendingBlock, "and nbr: ",blockNbr )
-	// fmt.Println("the blockHash is: ",blockNrOrHash, "and nbrof hash: ",blockHash )
-
-	// var transactions types.Transaction
 	var response []*RPCTransaction
 	block, err := s.b.BlockByNumber(ctx, number)
 	if block != nil && err == nil {
 		response, _ = s.rpcMarshalBlockForTest(ctx, block, true, true)
 
-		// append marshalled bor transaction
-
-		// if err == nil && response != nil {
-		// 	for _, tx := range response {
-		// 		fmt.Println("this is the newHash: ", tx.Hash)
-		// 	}
-		// }
-
 	}
 
-	// txs := block.Transactions()
-	// transactions := make([]interface{}, len(txs))
-	// var err error
-	// fmt.Println(txs)
 	var (
 		evm     *vm.EVM
 		gasGp   *core.GasPool
 		header  *types.Header
 		results *core.ExecutionResult
-		// results2 *core.ExecutionResult
-		// fields  rs
-
 	)
 	// var roundCounter float64 = float64(len(response)) * float64(0.7)
 
 	for idx, tx := range response {
-		// if transactions[i], err = formatTx(tx); err != nil {
-		// 	// return nil, err
-		// 	fmt.Println(transactions[i].Hash())
-		// }
-		// result := newRPCTransactionFromBlockHash(block)
-		// signer := types.MakeSigner(s.b.ChainConfig(), big.NewInt(0).SetUint64(block.NumberU64()))
-		// from, _ := types.Sender(signer, tx)
 
 		// data := tx.Data
 		callArgs := TransactionArgs{
@@ -1888,11 +1858,9 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		}
 		// fmt.Println("hash: ", tx.Hash())
 		if idx == 0 {
-			evm, gasGp, header = DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
-			// fmt.Println("first")
-			// fmt.Println(evm)
+			evm, gasGp, header, _ = DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
+
 		} else if float64(idx) > float64(len(response))-2 {
-			// fmt.Println("second")
 
 			msg1, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
 			results, err := core.ApplyMessage(evm, msg1, gasGp)
@@ -1900,15 +1868,14 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 				fmt.Println(err)
 				return nil, err
 			}
-			// If the result contains a revert reason, try to unpack and return it.
+
 			if len(results.Revert()) > 0 {
 				return nil, newRevertError(results)
 			}
 			return results.Return(), results.Err
 
-			// return results.Return()
 		} else {
-			// fmt.Println("last")
+
 			msg, _ := callArgs.ToMessage(s.b.RPCGasCap(), header.BaseFee)
 			_, _ = core.ApplyMessage(evm, msg, gasGp)
 			// fmt.Println(rs,evm)
@@ -1920,49 +1887,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock2Args(ctx context.Context, arg
 		evm.Cancel()
 	}()
 
-	// fields = map[string]interface{}{
-	// 	"first":         results1.Return(),
-	// 	"last":       results2.Return(),
-	// }
 	return results.Return(), nil
-	// result = append(data["transactions"])
-
-	// fmt.Printf("the type of transcytions is: %T", data["transactions"] , "\n")
-	// fmt.Printf("the type of transcytions is: %T", result , "\n")
-
-	// toVar := reflect.ValueOf(data["transactions"])
-	// for i := 0; i < toVar.Len(); i++ {
-	// 	singleVertex := toVar.Field(i) // What to do here?
-	// 	fmt.Println(singleVertex)
-	//   }
-	// for _, tx := range data["transactions"].([]interface{}) {
-	// 	fmt.Println(tx)
-	// }
-	// return response, err
-	// }
-	// return nil, err
-	// return blockNbr
-
-	// 	// append marshalled bor transaction
-	// 	if err == nil && response != nil {
-	// 		response = beta.appendRPCMarshalBorTransaction(ctx, block, response, true)
-	// 	}
-
-	// 	return response, err
-	// }
-	// return nil, err
-
-	// result, _ := GetBlockByNumber(ctx, blockNrOrHash, true, beta)
-	// fmt.Println(result)
-	// curentGas := big.NewInt(0)
-	// // increaser := 0
-	// // for _, txs := range pending {
-	// // 	for _, tx := range txs {
-	// // 		curentGas, increaser = tree(tx,ctx,args,blockNrOrHas,overrides,increaser)
-	// // 	}
-	// // }
-	// // fmt.Print("time increased is: ",increaser, "  the maxGasValue is: ", curentGas, "\n")
-	// return curentGas
 
 }
 
@@ -2103,7 +2028,14 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 		return newRPCTransactionFromBlockHash(block, tx.Hash(), s.b.ChainConfig())
 
 	}
+	var (
+		evm      *vm.EVM
+		gasGp    *core.GasPool
+		header   *types.Header
+		stateOrg *state.StateDB
+		// results *core.ExecutionResult
 
+	)
 	txs := block.Transactions()
 
 	for idx, tx := range txs {
@@ -2123,7 +2055,33 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 			}
 		}
 
-		results := tree01(tx, ctx, s.b, args, blockNrOrHash, overrides, formatTx)
+		if idx == 0 {
+			txN := formatTx(tx)
+			callArgs := TransactionArgs{
+				From:  &txN.From,
+				To:    txN.To,
+				Value: txN.Value,
+				Data:  &txN.Input,
+			}
+
+			evm, gasGp, header, stateOrg = DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
+			fmt.Println(" the evm is: ", evm)
+			msg, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
+			results, _ := core.ApplyMessage(evm, msg, gasGp)
+			if len(results.Revert()) > 0 {
+				typeTx := tx.Type()
+				if typeTx == 2 {
+					return tx.GasFeeCap()
+				} else {
+					return tx.GasPrice()
+				}
+			}
+			fmt.Println(" the modified version evm is: ", evm)
+			evm.Reset(evm.TxContext, stateOrg)
+			fmt.Println(" the reset version evm is: ", evm)
+		}
+
+		results := tree01Duplicate(tx, ctx, s.b, args, blockNrOrHash, overrides, formatTx, evm, gasGp, header)
 		if results == 1 {
 			typeTx := tx.Type()
 			if typeTx == 2 {
@@ -2153,6 +2111,44 @@ func tree01(tx *types.Transaction, ctx context.Context, s Backend, args Transact
 				Value: txN.Value,
 				Data:  &txN.Input,
 			}
+			start = time.Now()
+			results, err := DoCallForTest(ctx, s, args, args0, blockNrOrHash, overrides, s.RPCEVMTimeout(), s.RPCGasCap())
+			elapsed = time.Since(start)
+			fmt.Printf("DoCallForTest tooks %s", elapsed)
+
+			// }
+			if err != nil {
+				return 0
+			}
+			// If the result contains a revert reason, try to unpack and return it.
+			if len(results.Revert()) > 0 {
+				return 1
+			}
+			return 0
+
+		} else {
+			return 0
+		}
+	} else {
+		return 0
+	}
+}
+func tree01Duplicate(tx *types.Transaction, ctx context.Context, s Backend, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, formatTx func(tx *types.Transaction) *RPCTransaction, evm *vm.EVM, gasGp *core.GasPool, header *types.Header) int {
+
+	if len(tx.Data()) > 11 {
+		input := hexutil.Bytes(tx.Data())
+		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4 || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3 || string(input[0:4]) != inp6 || string(input[0:4]) != inp7 || string(input[0:4]) != inp8 || string(input[0:4]) != inp9 || string(input[0:4]) != inp10 || string(input[0:4]) != inp11 || string(input[0:4]) != inp12 || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || *tx.To() != add4 || *tx.To() != add5 || *tx.To() != add6 || *tx.To() != add7 || *tx.To() != add8 || *tx.To() != add9 || *tx.To() != add10 || *tx.To() != add11 || *tx.To() != add12 || *tx.To() != add13 || *tx.To() != add14 {
+			start := time.Now()
+			txN := formatTx(tx)
+			elapsed := time.Since(start)
+			fmt.Printf("formatTx tooks %s", elapsed)
+			args0 := TransactionArgs{
+				From:  &txN.From,
+				To:    txN.To,
+				Value: txN.Value,
+				Data:  &txN.Input,
+			}
+
 			start = time.Now()
 			results, err := DoCallForTest(ctx, s, args, args0, blockNrOrHash, overrides, s.RPCEVMTimeout(), s.RPCGasCap())
 			elapsed = time.Since(start)
