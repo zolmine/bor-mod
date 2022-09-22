@@ -2091,6 +2091,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 				return tx.GasPrice()
 			}
 		}
+		evm.Reset(evm.TxContext, stateOrg)
 	}
 
 	return 0
