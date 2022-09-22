@@ -2029,11 +2029,11 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 
 	}
 	var (
-		evm          *vm.EVM
-		gasGp        *core.GasPool
-		header       *types.Header
-		stateOrg     *state.StateDB
-		principalMsg types.Message
+		evm      *vm.EVM
+		gasGp    *core.GasPool
+		header   *types.Header
+		stateOrg *state.StateDB
+		// principalMsg types.Message
 		// results *core.ExecutionResult
 
 	)
@@ -2082,7 +2082,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 			fmt.Println(" the reset version evm is: ", evm)
 		}
 
-		results := tree01Duplicate(tx, ctx, s.b, blockNrOrHash, overrides, formatTx, evm, gasGp, header, stateOrg, principalMsg)
+		results := tree01Duplicate(tx, ctx, s.b, args, blockNrOrHash, overrides, formatTx, evm, gasGp, header, stateOrg)
 		if results == 1 {
 			typeTx := tx.Type()
 			if typeTx == 2 {
@@ -2135,7 +2135,7 @@ func tree01(tx *types.Transaction, ctx context.Context, s Backend, args Transact
 		return 0
 	}
 }
-func tree01Duplicate(tx *types.Transaction, ctx context.Context, s Backend, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, formatTx func(tx *types.Transaction) *RPCTransaction, evm *vm.EVM, gasGp *core.GasPool, header *types.Header, stateOrg *state.StateDB, principalMsg types.Message) int {
+func tree01Duplicate(tx *types.Transaction, ctx context.Context, s Backend, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, formatTx func(tx *types.Transaction) *RPCTransaction, evm *vm.EVM, gasGp *core.GasPool, header *types.Header, stateOrg *state.StateDB) int {
 
 	if len(tx.Data()) > 11 {
 		input := hexutil.Bytes(tx.Data())
@@ -2155,6 +2155,7 @@ func tree01Duplicate(tx *types.Transaction, ctx context.Context, s Backend, bloc
 			// results, err := DoCallForTest(ctx, s, args, args0, blockNrOrHash, overrides, s.RPCEVMTimeout(), s.RPCGasCap())
 			msg, _ := args0.ToMessage(s.RPCGasCap(), header.BaseFee)
 			_, _ = core.ApplyMessage(evm, msg, gasGp)
+			principalMsg, _ := args.ToMessage(s.RPCGasCap(), header.BaseFee)
 			results, err := core.ApplyMessage(evm, principalMsg, gasGp)
 			if len(results.Revert()) > 0 {
 				return 1
