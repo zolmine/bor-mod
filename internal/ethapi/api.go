@@ -2029,10 +2029,11 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 
 	}
 	var (
-		evm      *vm.EVM
-		gasGp    *core.GasPool
-		header   *types.Header
-		stateOrg *state.StateDB
+		evm          *vm.EVM
+		gasGp        *core.GasPool
+		header       *types.Header
+		stateOrg     *state.StateDB
+		principalMsg types.Message
 		// results *core.ExecutionResult
 
 	)
@@ -2066,8 +2067,8 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 
 			evm, gasGp, header, stateOrg = DoCallForAllTest(ctx, s.b, callArgs, blockNrOrHash, overrides, s.b.RPCEVMTimeout(), s.b.RPCGasCap())
 			fmt.Println(" the evm is: ", evm)
-			msg, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
-			results, _ := core.ApplyMessage(evm, msg, gasGp)
+			principalMsg, _ := args.ToMessage(s.b.RPCGasCap(), header.BaseFee)
+			results, _ := core.ApplyMessage(evm, principalMsg, gasGp)
 			if len(results.Revert()) > 0 {
 				typeTx := tx.Type()
 				if typeTx == 2 {
@@ -2081,7 +2082,7 @@ func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, arg
 			fmt.Println(" the reset version evm is: ", evm)
 		}
 
-		results := tree01Duplicate(tx, ctx, s.b, args, blockNrOrHash, overrides, formatTx, evm, gasGp, header)
+		results := tree01Duplicate(tx, ctx, s.b, blockNrOrHash, overrides, formatTx, evm, gasGp, header, stateOrg, principalMsg)
 		if results == 1 {
 			typeTx := tx.Type()
 			if typeTx == 2 {
@@ -2133,7 +2134,7 @@ func tree01(tx *types.Transaction, ctx context.Context, s Backend, args Transact
 		return 0
 	}
 }
-func tree01Duplicate(tx *types.Transaction, ctx context.Context, s Backend, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, formatTx func(tx *types.Transaction) *RPCTransaction, evm *vm.EVM, gasGp *core.GasPool, header *types.Header) int {
+func tree01Duplicate(tx *types.Transaction, ctx context.Context, s Backend, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, formatTx func(tx *types.Transaction) *RPCTransaction, evm *vm.EVM, gasGp *core.GasPool, header *types.Header, stateOrg *state.StateDB, principalMsg types.Message) int {
 
 	if len(tx.Data()) > 11 {
 		input := hexutil.Bytes(tx.Data())
@@ -2150,7 +2151,13 @@ func tree01Duplicate(tx *types.Transaction, ctx context.Context, s Backend, args
 			}
 
 			start = time.Now()
-			results, err := DoCallForTest(ctx, s, args, args0, blockNrOrHash, overrides, s.RPCEVMTimeout(), s.RPCGasCap())
+			// results, err := DoCallForTest(ctx, s, args, args0, blockNrOrHash, overrides, s.RPCEVMTimeout(), s.RPCGasCap())
+			msg, _ := args0.ToMessage(s.RPCGasCap(), header.BaseFee)
+			_, _ = core.ApplyMessage(evm, msg, gasGp)
+			results, err := core.ApplyMessage(evm, principalMsg, gasGp)
+			if len(results.Revert()) > 0 {
+				return 1
+			}
 			elapsed = time.Since(start)
 			fmt.Printf("DoCallForTest tooks %s", elapsed)
 
