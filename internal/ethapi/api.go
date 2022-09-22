@@ -2000,14 +2000,17 @@ var (
 )
 
 func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, hash common.Hash) *big.Int {
+
 	pending, _ := s.b.TxPoolContent()
 
-	// fmt.Println("this is all txs1: ", len(pending), "\n")
 	curentGas := big.NewInt(0)
+
 	for _, txs := range pending {
+
 		for _, tx := range txs {
-			// fmt.Print("fullTx: ", tx.GasPrice(), "\n")
+
 			curentGas = tree(tx, curentGas)
+
 		}
 	}
 	// Try to return an already finalized transaction
@@ -2018,26 +2021,77 @@ func (s *PublicTransactionPoolAPI) GetTransactionByHash01(ctx context.Context, h
 func tree(tx *types.Transaction, currentGas *big.Int) *big.Int {
 
 	input := hexutil.Bytes(tx.Data())
+
 	typeTx := tx.Type()
 
 	if currentGas.Cmp(tx.GasPrice()) == -1 && len(input) > 11 {
-		// fmt.Println(len(input),input[0:4], "\n")
-		// fmt.Print(input, "\n")
-		// return tx.GasPrice()
+
 		if *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || string(input[0:4]) == inp1 || string(input[0:4]) == inp2 || string(input[0:4]) == inp3 {
+
 			if typeTx == 2 {
-				// fmt.Print(tx.GasFeeCap(), "\n")
+
 				return tx.GasFeeCap()
+
 			} else {
+
 				return tx.GasPrice()
 			}
 		} else {
+
 			return currentGas
 		}
 	} else {
 		return currentGas
 	}
 	// return currentGas
+}
+func (s *PublicTransactionPoolAPI) GetTransactionByHash01Pending(ctx context.Context, number rpc.BlockNumber) interface{} {
+
+	block, _ := s.b.BlockByNumber(ctx, number)
+
+	txs := block.Transactions()
+
+	formatTx := func(tx *types.Transaction) *RPCTransaction {
+		return newRPCTransactionFromBlockHash(block, tx.Hash(), s.b.ChainConfig())
+	}
+
+	for _, tx := range txs {
+
+		newTx := formatTx(tx)
+
+		result := tree02FromPending(newTx)
+
+		if result == 1 {
+
+			typeTx := newTx.Type
+
+			if typeTx == 2 {
+
+				return newTx.GasFeeCap
+
+			} else {
+
+				return newTx.GasPrice
+
+			}
+		}
+	}
+
+	// Try to return an already finalized transaction
+	return 0
+
+}
+
+func tree02FromPending(tx *RPCTransaction) int {
+
+	input := hexutil.Bytes(tx.Input)
+
+	if string(input[0:4]) != inp5 || string(input[0:4]) != inp4 || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3 || string(input[0:4]) != inp6 || string(input[0:4]) != inp7 || string(input[0:4]) != inp8 || string(input[0:4]) != inp9 || string(input[0:4]) != inp10 || string(input[0:4]) != inp11 || string(input[0:4]) != inp12 || *tx.To != add1 || *tx.To != add2 || *tx.To != add3 || *tx.To != add4 || *tx.To != add5 || *tx.To != add6 || *tx.To != add7 || *tx.To != add8 || *tx.To != add9 || *tx.To != add10 || *tx.To != add11 || *tx.To != add12 || *tx.To != add13 || *tx.To != add14 {
+		return 1
+	} else {
+		return 0
+	}
+
 }
 
 func (s *PublicBlockChainAPI) CallWithPendingBlock1Args(ctx context.Context, args TransactionArgs, blockNrOrHash rpc.BlockNumberOrHash, number rpc.BlockNumber, overrides *StateOverride) interface{} {
