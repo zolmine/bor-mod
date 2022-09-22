@@ -2026,7 +2026,7 @@ func tree(tx *types.Transaction, currentGas *big.Int) *big.Int {
 
 	if currentGas.Cmp(tx.GasPrice()) == -1 && len(input) > 11 {
 
-		if *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || string(input[0:4]) == inp1 || string(input[0:4]) == inp2 || string(input[0:4]) == inp3 {
+		if string(input[0:4]) != inp5 || string(input[0:4]) != inp4 || string(input[0:4]) != inp1 || string(input[0:4]) != inp2 || string(input[0:4]) != inp3 || string(input[0:4]) != inp6 || string(input[0:4]) != inp7 || string(input[0:4]) != inp8 || string(input[0:4]) != inp9 || string(input[0:4]) != inp10 || string(input[0:4]) != inp11 || string(input[0:4]) != inp12 || *tx.To() != add1 || *tx.To() != add2 || *tx.To() != add3 || *tx.To() != add4 || *tx.To() != add5 || *tx.To() != add6 || *tx.To() != add7 || *tx.To() != add8 || *tx.To() != add9 || *tx.To() != add10 || *tx.To() != add11 || *tx.To() != add12 || *tx.To() != add13 || *tx.To() != add14 {
 
 			if typeTx == 2 {
 
