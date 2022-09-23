@@ -366,7 +366,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactionsTest(ctx context.Con
 	add14, _ := decodeAddress("0x4aAEC1FA8247F85Dc3Df20F4e03FEAFdCB087Ae9")
 	add15, _ := decodeAddress("0x51aBA405De2b25E5506DeA32A6697F450cEB1a17")
 
-	block := api.miner.PendingBlock()
+	block, _ := api.miner.Pending()
 	formatTx := func(tx *types.Transaction) *RPCTransaction {
 		return newRPCTransactionFromBlockHash(block, tx.Hash(), api.chainConfig)
 	}
