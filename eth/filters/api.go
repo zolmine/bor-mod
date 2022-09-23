@@ -24,13 +24,16 @@ import (
 	"math/big"
 	"sync"
 	"time"
+
 	// "reflect"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/miner"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 )
@@ -41,6 +44,7 @@ type filter struct {
 	typ      Type
 	deadline *time.Timer // filter is inactiv when deadline triggers
 	txs      []*types.Transaction
+	txsTest  []*RPCTransaction
 	txTime   *time.Time
 	hashes   []common.Hash
 	crit     FilterCriteria
@@ -51,16 +55,38 @@ type filter struct {
 // PublicFilterAPI offers support to create and manage filters. This will allow external clients to retrieve various
 // information related to the Ethereum protocol such als blocks, transactions and logs.
 type PublicFilterAPI struct {
-	backend   Backend
-	mux       *event.TypeMux
-	quit      chan struct{}
-	events    *EventSystem
-	filtersMu sync.Mutex
-	filters   map[rpc.ID]*filter
-	timeout   time.Duration
-	borLogs   bool
-
+	backend     Backend
+	mux         *event.TypeMux
+	quit        chan struct{}
+	events      *EventSystem
+	filtersMu   sync.Mutex
+	filters     map[rpc.ID]*filter
+	timeout     time.Duration
+	borLogs     bool
+	miner       *miner.Miner
 	chainConfig *params.ChainConfig
+}
+
+type RPCTransaction struct {
+	BlockHash        *common.Hash      `json:"blockHash"`
+	BlockNumber      *hexutil.Big      `json:"blockNumber"`
+	From             common.Address    `json:"from"`
+	Gas              hexutil.Uint64    `json:"gas"`
+	GasPrice         *hexutil.Big      `json:"gasPrice"`
+	GasFeeCap        *hexutil.Big      `json:"maxFeePerGas,omitempty"`
+	GasTipCap        *hexutil.Big      `json:"maxPriorityFeePerGas,omitempty"`
+	Hash             common.Hash       `json:"hash"`
+	Input            hexutil.Bytes     `json:"input"`
+	Nonce            hexutil.Uint64    `json:"nonce"`
+	To               *common.Address   `json:"to"`
+	TransactionIndex *hexutil.Uint64   `json:"transactionIndex"`
+	Value            *hexutil.Big      `json:"value"`
+	Type             hexutil.Uint64    `json:"type"`
+	Accesses         *types.AccessList `json:"accessList,omitempty"`
+	ChainID          *hexutil.Big      `json:"chainId,omitempty"`
+	V                *hexutil.Big      `json:"v"`
+	R                *hexutil.Big      `json:"r"`
+	S                *hexutil.Big      `json:"s"`
 }
 
 // NewPublicFilterAPI returns a new PublicFilterAPI instance.
@@ -255,6 +281,146 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	return rpcSub, nil
 }
 
+func newRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber uint64, index uint64, baseFee *big.Int, config *params.ChainConfig) *RPCTransaction {
+	signer := types.MakeSigner(config, big.NewInt(0).SetUint64(blockNumber))
+	from, _ := types.Sender(signer, tx)
+	v, r, s := tx.RawSignatureValues()
+	result := &RPCTransaction{
+		Type:     hexutil.Uint64(tx.Type()),
+		From:     from,
+		Gas:      hexutil.Uint64(tx.Gas()),
+		GasPrice: (*hexutil.Big)(tx.GasPrice()),
+		Hash:     tx.Hash(),
+		Input:    hexutil.Bytes(tx.Data()),
+		Nonce:    hexutil.Uint64(tx.Nonce()),
+		To:       tx.To(),
+		Value:    (*hexutil.Big)(tx.Value()),
+		V:        (*hexutil.Big)(v),
+		R:        (*hexutil.Big)(r),
+		S:        (*hexutil.Big)(s),
+	}
+	if blockHash != (common.Hash{}) {
+		result.BlockHash = &blockHash
+		result.BlockNumber = (*hexutil.Big)(new(big.Int).SetUint64(blockNumber))
+		result.TransactionIndex = (*hexutil.Uint64)(&index)
+	}
+	switch tx.Type() {
+	case types.AccessListTxType:
+		al := tx.AccessList()
+		result.Accesses = &al
+		result.ChainID = (*hexutil.Big)(tx.ChainId())
+	case types.DynamicFeeTxType:
+		al := tx.AccessList()
+		result.Accesses = &al
+		result.ChainID = (*hexutil.Big)(tx.ChainId())
+		result.GasFeeCap = (*hexutil.Big)(tx.GasFeeCap())
+		result.GasTipCap = (*hexutil.Big)(tx.GasTipCap())
+		// if the transaction has been mined, compute the effective gas price
+		if baseFee != nil && blockHash != (common.Hash{}) {
+			// price = min(tip, gasFeeCap - baseFee) + baseFee
+			price := math.BigMin(new(big.Int).Add(tx.GasTipCap(), baseFee), tx.GasFeeCap())
+			result.GasPrice = (*hexutil.Big)(price)
+		} else {
+			result.GasPrice = (*hexutil.Big)(tx.GasFeeCap())
+		}
+	}
+	return result
+}
+
+func newRPCTransactionFromBlockIndex(b *types.Block, index uint64, config *params.ChainConfig) *RPCTransaction {
+	txs := b.Transactions()
+	if index >= uint64(len(txs)) {
+		return nil
+	}
+	return newRPCTransaction(txs[index], b.Hash(), b.NumberU64(), index, b.BaseFee(), config)
+}
+
+func newRPCTransactionFromBlockHash(b *types.Block, hash common.Hash, config *params.ChainConfig) *RPCTransaction {
+	for idx, tx := range b.Transactions() {
+		if tx.Hash() == hash {
+			return newRPCTransactionFromBlockIndex(b, uint64(idx), config)
+		}
+	}
+	return nil
+}
+func (api *PublicFilterAPI) SubscribeFullPendingTransactionsTest(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
+	notifier, supported := rpc.NotifierFromContext(ctx)
+	if !supported {
+		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
+	}
+
+	rpcSub := notifier.CreateSubscription()
+	add1, _ := decodeAddress("0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506")
+	add2, _ := decodeAddress("0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff")
+	add3, _ := decodeAddress("0xdBe30E8742fBc44499EB31A19814429CECeFFaA0")
+	add4, _ := decodeAddress("0x711a119dCee9d076e9f4d680C6c8FD694DAaF68D")
+	add5, _ := decodeAddress("0xAf877420786516FC6692372c209e0056169eebAf")
+	add6, _ := decodeAddress("0xC02D3bbe950C4Bde21345c8c9Db58b7aF57C6668")
+	add7, _ := decodeAddress("0x6AC823102CB347e1f5925C634B80a98A3aee7E03")
+	add8, _ := decodeAddress("0x324Af1555Ea2b98114eCb852ed67c2B5821b455b")
+	add9, _ := decodeAddress("0x9055682E58C74fc8DdBFC55Ad2428aB1F96098Fc")
+	add10, _ := decodeAddress("0x76d078d279355253b3c527f39bb7bf1cfED87628")
+	add11, _ := decodeAddress("0xD0b5335BE74480F9303B88f5B55ACD676598882A")
+	add12, _ := decodeAddress("0x7CaEC184D3f24f8FD66BbB04B153b19143c6757B")
+	add13, _ := decodeAddress("0xfBE675868f00aE8145d6236232b11C44d910B24a")
+	add14, _ := decodeAddress("0x4aAEC1FA8247F85Dc3Df20F4e03FEAFdCB087Ae9")
+	add15, _ := decodeAddress("0x51aBA405De2b25E5506DeA32A6697F450cEB1a17")
+
+	block := api.miner.PendingBlock()
+	formatTx := func(tx *types.Transaction) *RPCTransaction {
+		return newRPCTransactionFromBlockHash(block, tx.Hash(), api.chainConfig)
+	}
+	go func() {
+		txs := make(chan []*types.Transaction, 128)
+		pendingTxSub := api.events.SubscribePendingTxs(txs)
+
+		for {
+			select {
+			case txs := <-txs:
+				// To keep the original behaviour, send a single tx hash in one notification.
+				// TODO(rjl493456442) Send a batch of tx hashes in one notification
+				for _, tx := range txs {
+					// fmt.Print(tx.To(), "\n")
+					txn := formatTx(tx)
+
+					// if tx.To() != nil {
+
+					if add1 == *txn.To || add2 == *txn.To || add3 == *txn.To || add4 == *txn.To || add5 == *txn.To || add6 == *txn.To || add7 == *txn.To || add8 == *txn.To || add9 == *txn.To || add10 == *txn.To || add11 == *txn.To || add12 == *txn.To || add13 == *txn.To || add14 == *txn.To || add15 == *txn.To {
+
+						// from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx)
+						// if err != nil {
+						// 	from, _ := types.Sender(types.HomesteadSigner{}, tx)
+						// 	fmt.Print(from)
+						// }
+						// fmt.Print(tx.time)
+						result := map[string]interface{}{
+							// "from": txn.From,
+							"tx":   txn,
+							"time": int64(time.Now().UnixMilli()),
+						}
+
+						if fullTx != nil && *fullTx {
+							notifier.Notify(rpcSub.ID, result)
+						} else {
+							notifier.Notify(rpcSub.ID, result)
+						}
+					}
+					// }
+
+				}
+			case <-rpcSub.Err():
+				pendingTxSub.Unsubscribe()
+				return
+			case <-notifier.Closed():
+				pendingTxSub.Unsubscribe()
+				return
+			}
+		}
+	}()
+
+	return rpcSub, nil
+}
+
 func (api *PublicFilterAPI) SubscribeGreatherGas(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
@@ -268,6 +434,7 @@ func (api *PublicFilterAPI) SubscribeGreatherGas(ctx context.Context, fullTx *bo
 		// txsTime := make(chan []*types.Transaction.time, 128)
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 
+		// txss := block.Transactions()
 		// fmt.Print(time.Now())
 		for {
 			select {
