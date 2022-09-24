@@ -278,6 +278,57 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 	return rpcSub, nil
 }
 
+func (api *PublicFilterAPI) SubscribeFullPendingTransactionsForTest(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
+	notifier, supported := rpc.NotifierFromContext(ctx)
+	if !supported {
+		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
+	}
+
+	rpcSub := notifier.CreateSubscription()
+
+	go func() {
+		txs := make(chan []*types.Transaction, 128)
+		pendingTxSub := api.events.SubscribePendingTxs(txs)
+		blockNBR := uint64(rpc.PendingBlockNumber.Int64())
+		signer := types.MakeSigner(api.chainConfig, big.NewInt(0).SetUint64(blockNBR))
+		for {
+			select {
+			case txs := <-txs:
+				// To keep the original behaviour, send a single tx hash in one notification.
+				// TODO(rjl493456442) Send a batch of tx hashes in one notification
+				for _, tx := range txs {
+					// fmt.Print(tx.To(), "\n")
+					if tx.To() != nil {
+
+						from, _ := types.Sender(signer, tx)
+						// fmt.Print(tx.time)
+						result := map[string]interface{}{
+							"from": from,
+							"tx":   tx,
+							"time": int64(time.Now().UnixMilli()),
+						}
+
+						if fullTx != nil && *fullTx {
+							notifier.Notify(rpcSub.ID, result)
+						} else {
+							notifier.Notify(rpcSub.ID, result)
+						}
+					}
+
+				}
+			case <-rpcSub.Err():
+				pendingTxSub.Unsubscribe()
+				return
+			case <-notifier.Closed():
+				pendingTxSub.Unsubscribe()
+				return
+			}
+		}
+	}()
+
+	return rpcSub, nil
+}
+
 func newRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber uint64, index uint64, baseFee *big.Int, config *params.ChainConfig) *RPCTransaction {
 	signer := types.MakeSigner(config, big.NewInt(0).SetUint64(blockNumber))
 	from, _ := types.Sender(signer, tx)
