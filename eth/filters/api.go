@@ -259,7 +259,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 							if fullTx != nil && *fullTx {
 								notifier.Notify(rpcSub.ID, result)
 							} else {
-								notifier.Notify(rpcSub.ID, result)
+								continue
 							}
 						}
 					}
