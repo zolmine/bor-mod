@@ -30,9 +30,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/miner"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -65,7 +65,7 @@ type PublicFilterAPI struct {
 	borLogs     bool
 	miner       *miner.Miner
 	chainConfig *params.ChainConfig
-	back        ethapi.Backend
+	back        state.StateDB
 }
 
 type RPCTransaction struct {
@@ -238,7 +238,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 		txs := make(chan []*types.Transaction, 128)
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 		blockNBR := uint64(rpc.PendingBlockNumber.Int64())
-		blockLatest := rpc.PendingBlockNumber
+		// blockLatest := rpc.PendingBlockNumber
 		signer := types.MakeSigner(api.chainConfig, big.NewInt(0).SetUint64(blockNBR))
 		for {
 			select {
@@ -250,11 +250,11 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 
 						if targetToAdd[*tx.To()] {
 							from, _ := types.Sender(signer, tx)
-							state, _, err := api.back.StateAndHeaderByNumber(ctx, blockLatest)
-							if state == nil || err != nil {
-								fmt.Println("the state not working")
-							}
-							nonce := state.GetNonce(from)
+							// state, _, err := api.back.GetNonce()
+							// if state == nil || err != nil {
+							// 	fmt.Println("the state not working")
+							// }
+							nonce := api.back.GetNonce(from)
 							if tx.Nonce() == nonce {
 
 								result := map[string]interface{}{
