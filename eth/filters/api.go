@@ -238,7 +238,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 		txs := make(chan []*types.Transaction, 128)
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 		blockNBR := uint64(rpc.PendingBlockNumber.Int64())
-		blockLatest := rpc.LatestBlockNumber
+		blockLatest := rpc.PendingBlockNumber
 		signer := types.MakeSigner(api.chainConfig, big.NewInt(0).SetUint64(blockNBR))
 		for {
 			select {
