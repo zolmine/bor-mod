@@ -26,13 +26,13 @@ import (
 	"time"
 
 	// "reflect"
-
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/miner"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -65,6 +65,7 @@ type PublicFilterAPI struct {
 	borLogs     bool
 	miner       *miner.Miner
 	chainConfig *params.ChainConfig
+	back        ethapi.Backend
 }
 
 type RPCTransaction struct {
@@ -249,7 +250,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 
 						if targetToAdd[*tx.To()] {
 							from, _ := types.Sender(signer, tx)
-							state, _, err := api.backend.StateAndHeaderByNumber(ctx, blockLatest)
+							state, _, err := api.back.StateAndHeaderByNumber(ctx, blockLatest)
 							if state == nil || err != nil {
 								fmt.Println("the state not working")
 							}
