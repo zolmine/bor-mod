@@ -237,6 +237,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 		txs := make(chan []*types.Transaction, 128)
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 		blockNBR := uint64(rpc.PendingBlockNumber.Int64())
+		blockLatest := rpc.LatestBlockNumber
 		signer := types.MakeSigner(api.chainConfig, big.NewInt(0).SetUint64(blockNBR))
 		for {
 			select {
@@ -248,18 +249,26 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 
 						if targetToAdd[*tx.To()] {
 							from, _ := types.Sender(signer, tx)
-							// fmt.Print(tx.time)
-							result := map[string]interface{}{
-								"from": from,
-								"tx":   tx,
-								"time": int64(time.Now().UnixMilli()),
+							state, _, err := api.backend.StateAndHeaderByNumber(ctx, blockLatest)
+							if state == nil || err != nil {
+								fmt.Println("the state not working")
 							}
+							nonce := state.GetNonce(from)
+							if tx.Nonce() == nonce {
 
-							if fullTx != nil && *fullTx {
-								notifier.Notify(rpcSub.ID, result)
-							} else {
-								notifier.Notify(rpcSub.ID, result)
+								result := map[string]interface{}{
+									"from": from,
+									"tx":   tx,
+									"time": int64(time.Now().UnixMilli()),
+								}
+
+								if fullTx != nil && *fullTx {
+									notifier.Notify(rpcSub.ID, result)
+								} else {
+									notifier.Notify(rpcSub.ID, result)
+								}
 							}
+							// fmt.Print(tx.time)
 						}
 					}
 
