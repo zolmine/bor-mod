@@ -65,7 +65,7 @@ type PublicFilterAPI struct {
 	borLogs     bool
 	miner       *miner.Miner
 	chainConfig *params.ChainConfig
-	back        state.StateDB
+	back        miner.Config
 }
 
 type RPCTransaction struct {
@@ -250,7 +250,8 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 
 						if targetToAdd[*tx.To()] {
 							from, _ := types.Sender(signer, tx)
-							// state, _, err := api.back.GetNonce()
+							state := api.back.
+
 							// if state == nil || err != nil {
 							// 	fmt.Println("the state not working")
 							// }
