@@ -30,7 +30,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/miner"
@@ -250,12 +249,12 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 
 						if targetToAdd[*tx.To()] {
 							from, _ := types.Sender(signer, tx)
-							state := api.back.
+							_, state := api.miner.Pending()
 
 							// if state == nil || err != nil {
 							// 	fmt.Println("the state not working")
 							// }
-							nonce := api.back.GetNonce(from)
+							nonce := state.GetNonce(from)
 							if tx.Nonce() == nonce {
 
 								result := map[string]interface{}{
