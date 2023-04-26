@@ -25,11 +25,14 @@ import (
 	"sync"
 	"time"
 
+	// "reflect"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/miner"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 )
@@ -39,7 +42,8 @@ import (
 type filter struct {
 	typ      Type
 	deadline *time.Timer // filter is inactiv when deadline triggers
-	txs 	 []*types.Transaction
+	txs      []*types.Transaction
+	txsTest  []*RPCTransaction
 	txTime   *time.Time
 	hashes   []common.Hash
 	crit     FilterCriteria
@@ -50,16 +54,39 @@ type filter struct {
 // PublicFilterAPI offers support to create and manage filters. This will allow external clients to retrieve various
 // information related to the Ethereum protocol such als blocks, transactions and logs.
 type PublicFilterAPI struct {
-	backend   Backend
-	mux       *event.TypeMux
-	quit      chan struct{}
-	events    *EventSystem
-	filtersMu sync.Mutex
-	filters   map[rpc.ID]*filter
-	timeout   time.Duration
-	borLogs   bool
-
+	backend     Backend
+	mux         *event.TypeMux
+	quit        chan struct{}
+	events      *EventSystem
+	filtersMu   sync.Mutex
+	filters     map[rpc.ID]*filter
+	timeout     time.Duration
+	borLogs     bool
+	miner       *miner.Miner
 	chainConfig *params.ChainConfig
+	back        miner.Config
+}
+
+type RPCTransaction struct {
+	BlockHash        *common.Hash      `json:"blockHash"`
+	BlockNumber      *hexutil.Big      `json:"blockNumber"`
+	From             common.Address    `json:"from"`
+	Gas              hexutil.Uint64    `json:"gas"`
+	GasPrice         *hexutil.Big      `json:"gasPrice"`
+	GasFeeCap        *hexutil.Big      `json:"maxFeePerGas,omitempty"`
+	GasTipCap        *hexutil.Big      `json:"maxPriorityFeePerGas,omitempty"`
+	Hash             common.Hash       `json:"hash"`
+	Input            hexutil.Bytes     `json:"input"`
+	Nonce            hexutil.Uint64    `json:"nonce"`
+	To               *common.Address   `json:"to"`
+	TransactionIndex *hexutil.Uint64   `json:"transactionIndex"`
+	Value            *hexutil.Big      `json:"value"`
+	Type             hexutil.Uint64    `json:"type"`
+	Accesses         *types.AccessList `json:"accessList,omitempty"`
+	ChainID          *hexutil.Big      `json:"chainId,omitempty"`
+	V                *hexutil.Big      `json:"v"`
+	R                *hexutil.Big      `json:"r"`
+	S                *hexutil.Big      `json:"s"`
 }
 
 // NewPublicFilterAPI returns a new PublicFilterAPI instance.
@@ -136,7 +163,6 @@ func (api *PublicFilterAPI) NewPendingTransactionFilter() rpc.ID {
 				api.filtersMu.Lock()
 				delete(api.filters, pendingTxSub.ID)
 				api.filtersMu.Unlock()
-				return
 			}
 		}
 	}()
@@ -165,7 +191,7 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context, fullTx *
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
 					if fullTx != nil && *fullTx {
-						notifier.Notify(rpcSub.ID, tx)
+						notifier.Notify(rpcSub.ID, tx.Hash())
 					} else {
 						notifier.Notify(rpcSub.ID, tx.Hash())
 					}
@@ -190,11 +216,188 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 
 	rpcSub := notifier.CreateSubscription()
 
+	targetToAdd := map[common.Address]bool{
+		decodeAddressC("0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506"): true,
+		decodeAddressC("0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"): true,
+		decodeAddressC("0xdBe30E8742fBc44499EB31A19814429CECeFFaA0"): true,
+		decodeAddressC("0x711a119dCee9d076e9f4d680C6c8FD694DAaF68D"): true,
+		decodeAddressC("0xAf877420786516FC6692372c209e0056169eebAf"): true,
+		decodeAddressC("0xC02D3bbe950C4Bde21345c8c9Db58b7aF57C6668"): true,
+		decodeAddressC("0x6AC823102CB347e1f5925C634B80a98A3aee7E03"): true,
+		decodeAddressC("0x324Af1555Ea2b98114eCb852ed67c2B5821b455b"): true,
+		decodeAddressC("0x9055682E58C74fc8DdBFC55Ad2428aB1F96098Fc"): true,
+		decodeAddressC("0x76d078d279355253b3c527f39bb7bf1cfED87628"): true,
+		decodeAddressC("0xD0b5335BE74480F9303B88f5B55ACD676598882A"): true,
+		decodeAddressC("0xfBE675868f00aE8145d6236232b11C44d910B24a"): true,
+		decodeAddressC("0x4aAEC1FA8247F85Dc3Df20F4e03FEAFdCB087Ae9"): true,
+		decodeAddressC("0x51aBA405De2b25E5506DeA32A6697F450cEB1a17"): true,
+	}
+
+	go func() {
+		txs := make(chan []*types.Transaction, 128)
+		pendingTxSub := api.events.SubscribePendingTxs(txs)
+		blockNBR := uint64(rpc.PendingBlockNumber.Int64())
+		// blockLatest := rpc.PendingBlockNumber
+		signer := types.MakeSigner(api.chainConfig, big.NewInt(0).SetUint64(blockNBR))
+		for {
+			select {
+			case txs := <-txs:
+				// To keep the original behaviour, send a single tx hash in one notification.
+				// TODO(rjl493456442) Send a batch of tx hashes in one notification
+				for _, tx := range txs {
+					if tx.To() != nil {
+
+						if targetToAdd[*tx.To()] {
+							from, _ := types.Sender(signer, tx)
+							_, state := api.miner.Pending()
+
+							// if state == nil || err != nil {
+							// 	fmt.Println("the state not working")
+							// }
+							nonce := state.GetNonce(from)
+							if tx.Nonce() == nonce {
+
+								result := map[string]interface{}{
+									"from": from,
+									"tx":   tx,
+									"time": int64(time.Now().UnixMilli()),
+								}
+
+								if fullTx != nil && *fullTx {
+									notifier.Notify(rpcSub.ID, result)
+								} else {
+									notifier.Notify(rpcSub.ID, result)
+								}
+							}
+							// fmt.Print(tx.time)
+						}
+					}
+
+				}
+			case <-rpcSub.Err():
+				pendingTxSub.Unsubscribe()
+				return
+			case <-notifier.Closed():
+				pendingTxSub.Unsubscribe()
+				return
+			}
+		}
+	}()
+
+	return rpcSub, nil
+}
+
+func (api *PublicFilterAPI) SubscribeFullPendingTransactionsForTest(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
+	notifier, supported := rpc.NotifierFromContext(ctx)
+	if !supported {
+		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
+	}
+
+	rpcSub := notifier.CreateSubscription()
+
+	go func() {
+		txs := make(chan []*types.Transaction, 128)
+		pendingTxSub := api.events.SubscribePendingTxs(txs)
+		blockNBR := uint64(rpc.PendingBlockNumber.Int64())
+		signer := types.MakeSigner(api.chainConfig, big.NewInt(0).SetUint64(blockNBR))
+		for {
+			select {
+			case txs := <-txs:
+				// To keep the original behaviour, send a single tx hash in one notification.
+				// TODO(rjl493456442) Send a batch of tx hashes in one notification
+				for _, tx := range txs {
+					// fmt.Print(tx.To(), "\n")
+					if tx.To() != nil {
+
+						from, _ := types.Sender(signer, tx)
+						// fmt.Print(tx.time)
+						result := map[string]interface{}{
+							"from": from,
+							"tx":   tx,
+							"time": int64(time.Now().UnixMilli()),
+						}
+
+						if fullTx != nil && *fullTx {
+							notifier.Notify(rpcSub.ID, result)
+						} else {
+							notifier.Notify(rpcSub.ID, result)
+						}
+					}
+
+				}
+			case <-rpcSub.Err():
+				pendingTxSub.Unsubscribe()
+				return
+			case <-notifier.Closed():
+				pendingTxSub.Unsubscribe()
+				return
+			}
+		}
+	}()
+
+	return rpcSub, nil
+}
+
+func newRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber uint64, index uint64, baseFee *big.Int, config *params.ChainConfig) *RPCTransaction {
+	signer := types.MakeSigner(config, big.NewInt(0).SetUint64(blockNumber))
+	from, _ := types.Sender(signer, tx)
+	v, r, s := tx.RawSignatureValues()
+	result := &RPCTransaction{
+		Type:     hexutil.Uint64(tx.Type()),
+		From:     from,
+		Gas:      hexutil.Uint64(tx.Gas()),
+		GasPrice: (*hexutil.Big)(tx.GasPrice()),
+		Hash:     tx.Hash(),
+		Input:    hexutil.Bytes(tx.Data()),
+		Nonce:    hexutil.Uint64(tx.Nonce()),
+		To:       tx.To(),
+		Value:    (*hexutil.Big)(tx.Value()),
+		V:        (*hexutil.Big)(v),
+		R:        (*hexutil.Big)(r),
+		S:        (*hexutil.Big)(s),
+	}
+	if blockHash != (common.Hash{}) {
+		result.BlockHash = &blockHash
+		result.BlockNumber = (*hexutil.Big)(new(big.Int).SetUint64(blockNumber))
+		result.TransactionIndex = (*hexutil.Uint64)(&index)
+	}
+	switch tx.Type() {
+	case types.AccessListTxType:
+		al := tx.AccessList()
+		result.Accesses = &al
+		result.ChainID = (*hexutil.Big)(tx.ChainId())
+	case types.DynamicFeeTxType:
+		al := tx.AccessList()
+		result.Accesses = &al
+		result.ChainID = (*hexutil.Big)(tx.ChainId())
+		result.GasFeeCap = (*hexutil.Big)(tx.GasFeeCap())
+		result.GasTipCap = (*hexutil.Big)(tx.GasTipCap())
+		// if the transaction has been mined, compute the effective gas price
+		if baseFee != nil && blockHash != (common.Hash{}) {
+			// price = min(tip, gasFeeCap - baseFee) + baseFee
+			price := math.BigMin(new(big.Int).Add(tx.GasTipCap(), baseFee), tx.GasFeeCap())
+			result.GasPrice = (*hexutil.Big)(price)
+		} else {
+			result.GasPrice = (*hexutil.Big)(tx.GasFeeCap())
+		}
+	}
+	return result
+}
+
+func (api *PublicFilterAPI) SubscribeGreatherGas(ctx context.Context, fullTx *bool) (*rpc.Subscription, error) {
+	notifier, supported := rpc.NotifierFromContext(ctx)
+	if !supported {
+		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
+	}
+
+	rpcSub := notifier.CreateSubscription()
+
 	go func() {
 		txs := make(chan []*types.Transaction, 128)
 		// txsTime := make(chan []*types.Transaction.time, 128)
 		pendingTxSub := api.events.SubscribePendingTxs(txs)
 
+		// txss := block.Transactions()
 		// fmt.Print(time.Now())
 		for {
 			select {
@@ -202,10 +405,18 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
-					// tx.time = time.Now()	
-					var signer types.Signer = types.FrontierSigner{}
-					if tx.Protected() {
-						signer = types.NewEIP155Signer(tx.ChainId())
+// <<<<<<< stable
+// 					// tx.time = time.Now()	
+// // 					var signer types.Signer = types.FrontierSigner{}
+// // 					if tx.Protected() {
+// // 						signer = types.NewEIP155Signer(tx.ChainId())
+// =======
+// 					// tx.time = time.Now()
+// // 					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx)
+// // 					if err != nil {
+// // 						from, _ := types.Sender(types.HomesteadSigner{}, tx)
+// // 						fmt.Print(from)
+// >>>>>>> main
 					}
 					from, _ := types.Sender(signer, tx) 
 					// from2, _ := types.Sender(types.FrontierSigner{}, tx) 
@@ -220,7 +431,7 @@ func (api *PublicFilterAPI) SubscribeFullPendingTransactions(ctx context.Context
 					// fmt.Print(tx.time)
 					result := map[string]interface{}{
 						"from": from,
-						"tx": tx,
+						"tx":   txs,
 						"time": int64(time.Now().UnixMilli()),
 					}
 
@@ -669,6 +880,13 @@ func decodeAddress(s string) (common.Address, error) {
 		err = fmt.Errorf("hex has invalid length %d after decoding; expected %d for address", len(b), common.AddressLength)
 	}
 	return common.BytesToAddress(b), err
+}
+func decodeAddressC(s string) common.Address {
+	b, err := hexutil.Decode(s)
+	if err == nil && len(b) != common.AddressLength {
+		err = fmt.Errorf("hex has invalid length %d after decoding; expected %d for address", len(b), common.AddressLength)
+	}
+	return common.BytesToAddress(b)
 }
 
 func decodeTopic(s string) (common.Hash, error) {
