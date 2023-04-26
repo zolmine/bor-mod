@@ -405,12 +405,29 @@ func (api *PublicFilterAPI) SubscribeGreatherGas(ctx context.Context, fullTx *bo
 				// To keep the original behaviour, send a single tx hash in one notification.
 				// TODO(rjl493456442) Send a batch of tx hashes in one notification
 				for _, tx := range txs {
-					// tx.time = time.Now()
-					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx)
-					if err != nil {
-						from, _ := types.Sender(types.HomesteadSigner{}, tx)
-						fmt.Print(from)
+// <<<<<<< stable
+// 					// tx.time = time.Now()	
+// // 					var signer types.Signer = types.FrontierSigner{}
+// // 					if tx.Protected() {
+// // 						signer = types.NewEIP155Signer(tx.ChainId())
+// =======
+// 					// tx.time = time.Now()
+// // 					from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx)
+// // 					if err != nil {
+// // 						from, _ := types.Sender(types.HomesteadSigner{}, tx)
+// // 						fmt.Print(from)
+// >>>>>>> main
 					}
+					from, _ := types.Sender(signer, tx) 
+					// from2, _ := types.Sender(types.FrontierSigner{}, tx) 
+					// from1, _ := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx) 
+					// from0, _ := types.Sender(types.HomesteadSigner{}, tx) 
+					types.Sender(types.HomesteadSigner{}, tx)
+					// fmt.Printf("to address is: ", tx.To())
+					// if err != nil {
+					// 	from, _ := types.Sender(types.HomesteadSigner{}, tx) 
+					// 	fmt.Print(from)					
+					// }
 					// fmt.Print(tx.time)
 					result := map[string]interface{}{
 						"from": from,
